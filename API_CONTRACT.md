@@ -419,7 +419,7 @@ Authorization: Bearer <access_token>
 ## 5. Comments
 
 ### 5.1 Create Comment
-**POST** `/posts/{post_id}/comments`
+**POST** `/posts/comments/<post-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -427,7 +427,6 @@ Authorization: Bearer <access_token>
 ```json
 {
   "content": "Great post!",
-  "parent_comment_id": null
 }
 ```
 
@@ -435,19 +434,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": true,
-  "data": {
-    "comment_id": "v4",
-    "post_id": "v4",
-    "author": {
-      "user_id": "v4",
-      "username": "johndoe",
-      "profile_picture": "https://storage.com/profile.jpg"
-    },
-    "content": "Great post!",
-    "likes_count": 0,
-    "replies_count": 0,
-    "created_at": "2025-10-06T10:30:00Z"
-  },
+  "data": null,
   "message": "Comment created successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -455,8 +442,8 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 5.2 Get Comments
-**GET** `/posts/{post_id}/comments?page=1&limit=20`
+### 5.2 Get Comments of a post
+**GET** `/posts/comments/<post-id>`
 
 **Response:** `200 OK`
 ```json
@@ -472,17 +459,22 @@ Authorization: Bearer <access_token>
       },
       "content": "Great post!",
       "likes_count": 5,
-      "replies_count": 2,
+      "is_liked": false,
+      "created_at": "2025-10-06T10:30:00Z"
+    },
+    {
+      "comment_id": "v4",
+      "author": {
+        "user_id": "v4",
+        "username": "johndoe",
+        "profile_picture": "https://storage.com/profile.jpg"
+      },
+      "content": "Great post!",
+      "likes_count": 5,
       "is_liked": false,
       "created_at": "2025-10-06T10:30:00Z"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 15,
-    "pages": 1
-  },
   "message": "Comments retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -491,7 +483,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 5.3 Delete Comment
-**DELETE** `/comments/{comment_id}`
+**DELETE** `posts/comments/<comment_id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -500,7 +492,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 5.4 Like Comment
-**POST** `/comments/{comment_id}/like`
+**POST** `posts/comments/like-deslike/<comment-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -511,7 +503,6 @@ Authorization: Bearer <access_token>
   "data": {
     "comment_id": "v4",
     "is_liked": true,
-    "likes_count": 6
   },
   "message": "Comment liked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
