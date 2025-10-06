@@ -1,18 +1,17 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from datetime import datetime, date
 from typing import Optional, Any, Dict
-
 
 class RegisterUserRequest(BaseModel):
     email: EmailStr
     username: str
-    password: str
+    password: constr(min_length=8, max_length=72)  # enforce bcrypt safe length
     date_of_birth: date
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: constr(min_length=8, max_length=72)
 
 
 class GenericResponse(BaseModel):
