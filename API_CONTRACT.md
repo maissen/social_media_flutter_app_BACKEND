@@ -48,7 +48,20 @@ Authorization: Bearer <access_token>
     "total": 100,
     "pages": 5
   },
-  "message": "Data retrieved successfully",
+  "message": "",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
+### Error Response
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "INVALID_PAGE",
+    "message": "The requested page number exceeds the available pages."
+  },
+  "message": "",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```

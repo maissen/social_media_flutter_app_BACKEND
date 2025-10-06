@@ -1,5 +1,8 @@
 # Social Media App Architecture
 
+## see more details
+- See [API contract file](./API_CONTRACT.md) for details.
+
 ## 🎨 Frontend (Flutter App)
 
 ### Main Responsibilities
