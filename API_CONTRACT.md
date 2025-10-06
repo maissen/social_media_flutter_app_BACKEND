@@ -304,14 +304,14 @@ Authorization: Bearer <access_token>
 
 ## 4. Posts
 
-### 4.1 Create Post
-**POST** `/posts`
+### 4.1 Create a Post
+**POST** `/posts/create`
 
 **Headers:** 
 - `Authorization: Bearer <token>`
 - `Content-Type: multipart/form-data` (for media uploads)
 
-**Request Body (JSON):**
+**Request Body :**
 ```json
 {
   "content": "This is my post content",
@@ -349,7 +349,6 @@ Authorization: Bearer <access_token>
       "comments_count": 15,
       "is_liked": false,
       "created_at": "2025-10-06T10:30:00Z",
-      "updated_at": "2025-10-06T10:30:00Z"
     }
   ],
   "message": "Post retrieved successfully",
@@ -359,45 +358,8 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 4.4 Get User Posts
-**GET** `/users/{user_id}/posts?page=1&limit=20`
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "post_id": "v4",
-      "author": {
-        "user_id": "v4",
-        "username": "johndoe",
-        "profile_picture": "https://storage.com/profile.jpg"
-      },
-      "content": "This is my post content",
-      "media_urls": ["https://storage.com/image1.jpg"],
-      "topics": ["technology"],
-      "likes_count": 42,
-      "comments_count": 15,
-      "is_liked": false,
-      "created_at": "2025-10-06T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "pages": 3
-  },
-  "message": "User posts retrieved successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
----
-
 ### 4.5 Update Post
-**PATCH** `/posts/{post_id}`
+**PUT** `/posts/update/<post-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -416,7 +378,6 @@ Authorization: Bearer <access_token>
   "data": {
     "post_id": "v4",
     "content": "Updated content",
-    "topics": ["technology", "ai"],
     "updated_at": "2025-10-06T10:35:00Z"
   },
   "message": "Post updated successfully",
@@ -424,14 +385,10 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Errors:**
-- `403` - Not authorized to edit this post
-- `404` - Post not found
-
 ---
 
 ### 4.6 Delete Post
-**DELETE** `/posts/{post_id}`
+**DELETE** `/posts/delete/<post-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -440,7 +397,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 4.7 Like Post
-**POST** `/posts/{post_id}/like`
+**POST** `/posts/like-deslike/<post-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -450,31 +407,9 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": {
     "post_id": "v4",
-    "is_liked": true,
-    "likes_count": 43
+    "is_liked": true/false,
   },
-  "message": "Post liked successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
----
-
-### 4.8 Unlike Post
-**DELETE** `/posts/{post_id}/like`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "post_id": "v4",
-    "is_liked": false,
-    "likes_count": 42
-  },
-  "message": "Post unliked successfully",
+  "message": "Post liked/desliked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
