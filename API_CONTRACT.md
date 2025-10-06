@@ -121,7 +121,7 @@ Authorization: Bearer <access_token>
     "following_count": 200,
     "posts_count": 45,
     "created_at": "2025-01-15T10:30:00Z",
-    "i_am_a_follower": true
+    "is_following": false
   },
   "message": "User profile retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
@@ -168,37 +168,11 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 2.3 Get User by ID
-**GET** `/users/{user_id}`
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "user_id": "uuid-v4",
-    "username": "johndoe",
-    "bio": "Software developer",
-    "profile_picture": "https://storage.com/profile.jpg",
-    "followers_count": 150,
-    "following_count": 200,
-    "posts_count": 45,
-    "is_following": false
-  },
-  "message": "User retrieved successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
----
-
 ### 2.4 Search Users
-**GET** `/users/search?query={search_term}&page=1&limit=20`
+**GET** /users/search?username=user
 
 **Query Parameters:**
-- `query` (required): Search term
-- `page` (optional, default: 1): Page number
-- `limit` (optional, default: 20, max: 100): Results per page
+- `user` (required): searched username
 
 **Response:** `200 OK`
 ```json
