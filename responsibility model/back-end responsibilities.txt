@@ -1,0 +1,101 @@
+⚙️ Backend (FastAPI)
+🧠 Overview
+
+The backend replaces Firebase and becomes your API + business logic + database layer.
+It exposes REST (and optionally WebSocket) endpoints consumed by the Flutter app.
+
+🗄️ Main Components
+1. Authentication & Authorization
+
+JWT-based authentication (python-jose, fastapi-users, or custom logic).
+
+Routes for:
+
+/auth/register
+
+/auth/login
+
+/auth/logout
+
+/auth/refresh
+
+Password hashing using bcrypt.
+
+Role-based access (normal user / admin).
+
+Token validation middleware.
+
+2. Database
+
+Use PostgreSQL (or MySQL/MongoDB, depending on your comfort).
+ORM: SQLAlchemy + Alembic for migrations.
+
+Example tables:
+
+users
+
+posts
+
+comments
+
+likes
+
+follows
+
+groups
+
+quizzes
+
+notifications
+
+3. Posts & Media
+
+API routes for CRUD:
+
+/posts/ → Create/read/update/delete posts
+
+/posts/{id}/like → Like/unlike
+
+/posts/{id}/comments → Comment
+
+Media uploads handled via:
+
+/upload/image
+
+/upload/video
+
+Media stored in:
+
+Local folder (/media/) during development.
+
+Or cloud storage (e.g., AWS S3, MinIO) in production.
+
+4. Social Features
+
+/users/{id}/follow → Follow/unfollow users.
+
+/feed/ → Fetch posts from followed users.
+
+/users/search?query=... → Search by username.
+
+5. Notifications
+
+Real-time updates using:
+
+WebSocket (FastAPI supports it natively), or
+
+Background tasks + push notifications via FCM.
+
+Example event triggers:
+
+When someone likes/comments your post.
+
+When a new friend joins.
+
+6. Educational Features
+
+/quizzes/ → Create, join, or fetch quizzes.
+
+/groups/ → Thematic groups (science, sports, art).
+
+/resources/ → Educational content API.

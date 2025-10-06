@@ -1,0 +1,64 @@
+🎨 Frontend (Flutter App)
+Main Responsibilities
+
+User Interface (UI)
+
+Build screens using Flutter widgets.
+
+Implement smooth navigation (e.g., Navigator, GoRouter, etc.).
+
+Manage app themes and responsive layouts.
+
+State Management
+
+Manage user and post states (e.g., with Provider, Riverpod, Bloc, or GetX).
+
+Listen to Firestore streams for real-time updates.
+
+User Authentication (via Firebase SDK)
+
+Registration, login, and logout using Firebase Authentication.
+
+Display user info from Firestore (profile picture, bio, etc.).
+
+Maintain session persistence (auto-login).
+
+Post Management
+
+Create posts (text, image, video).
+
+Upload images/videos to Firebase Storage.
+
+Display posts in a chronological feed.
+
+Implement likes and comments (through Firestore).
+
+Social Interactions
+
+Follow/unfollow users.
+
+Show friend activity in feed.
+
+Display user profiles.
+
+Notifications
+
+Receive push notifications via Firebase Cloud Messaging (FCM).
+
+Display in-app alerts for friend requests, comments, etc.
+
+Search & Discovery
+
+Search for users by name or username.
+
+View public profiles and posts.
+
+Filter posts by topics (science, art, sports…).
+
+Educational Features
+
+Interactive quizzes UI.
+
+Create/join discussion groups.
+
+Display educational posts.
