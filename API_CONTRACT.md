@@ -6,12 +6,6 @@ Production: https://api.yoursocialapp.com/v1
 Development: http://localhost:8000/v1
 ```
 
-## Authentication
-All authenticated endpoints require a JWT Bearer token in the Authorization header:
-```
-Authorization: Bearer <access_token>
-```
-
 ---
 
 ## 1. Authentication & Authorization
@@ -33,12 +27,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": true,
-  "data": {
-    "user_id": "v4",
-    "email": "user@example.com",
-    "username": "johndoe",
-    "created_at": "2025-10-06T10:30:00Z"
-  },
+  "data": null,
   "message": "User registered successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -63,6 +52,7 @@ Authorization: Bearer <access_token>
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "expires_in": 3600,
     "user": {
+      "user_id": "3",
       "email": "user@example.com",
       "username": "johndoe",
       "profile_picture": "https://storage.com/profile.jpg"
@@ -140,7 +130,7 @@ Authorization: Bearer <access_token>
 
 ### 2.2 Update User Profile
 #### update profile bio
-**PUT** `/users/update/profile-bio/<user-id>`
+**PUT** `/users/update/bio/<user-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -190,31 +180,22 @@ Authorization: Bearer <access_token>
 ---
 
 ### 2.4 Search Users
-**GET** /users/search?username=user
+**GET** /users/search?username=maissen
 
 **Query Parameters:**
-- `user` (required): searched username
+- `username` (required): searched username
 
 **Response:** `200 OK`
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "user_id": "v5",
-      "username": "Maissen",
-      "profile_picture": "https://storage.com/profile.jpg",
-      "followers_count": 150,
-      "following_count": 200,
-    },
-    {
-      "user_id": "v4",
-      "username": "johndoe",
-      "profile_picture": "https://storage.com/profile.jpg",
-      "followers_count": 150,
-      "following_count": 200,
-    },  
-  ],
+  "data": {
+    "user_id": "v5",
+    "username": "Maissen",
+    "profile_picture": "https://storage.com/profile.jpg",
+    "followers_count": 150,
+    "following_count": 200,
+  },
   "message": "Users retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -229,23 +210,12 @@ Authorization: Bearer <access_token>
 
 **Headers:** `Authorization: Bearer <token>`
 
-**Request Body:**
-```json
-{
-  "data": {
-    "user_id": "v4",
-    "target_user_id": "v5",
-  }
-}
-```
 
 **Response:** `200 OK`
 ```json
 {
   "success": true,
   "data": {
-    "user_id": "v4",
-    "target_user_id": "v5",
     "is_following": true/false
   },
   "message": "User followed/unfollowed successfully",
@@ -293,6 +263,11 @@ Authorization: Bearer <access_token>
       "user_id": "v4",
       "username": "janedoe",
       "profile_picture": "https://storage.com/profile.jpg",
+    },
+    {
+      "user_id": "v4",
+      "username": "janedoe",
+      "profile_picture": "https://storage.com/profile.jpg",
     }
   ],
   "message": "Following list retrieved successfully",
@@ -315,7 +290,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "content": "This is my post content",
-  "media_urls": ["https://storage.com/image1.jpg"],
+  "media_url": "https://storage.com/image1.jpg",
 }
 ```
 
@@ -323,9 +298,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": true,
-  "data": {
-    "post_id": "v4",
-  },
+  "data": null,
   "message": "Post created successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -336,6 +309,9 @@ Authorization: Bearer <access_token>
 ### 4.2 Get Posts of a user
 **GET** `/posts/<user-id>`
 
+**Headers:** 
+- `Authorization: Bearer <token>`
+
 **Response:** `200 OK`
 ```json
 {
@@ -344,7 +320,7 @@ Authorization: Bearer <access_token>
     {
       "post_id": "v4",
       "content": "This is my post content",
-      "media_urls": ["https://storage.com/image1.jpg"],
+      "media_url": "https://storage.com/image1.jpg",
       "likes_count": 42,
       "comments_count": 15,
       "is_liked": false,
@@ -366,8 +342,7 @@ Authorization: Bearer <access_token>
 **Request Body:**
 ```json
 {
-  "content": "Updated content",
-  "topics": ["technology", "ai"]
+  "new_content": "new content",
 }
 ```
 
@@ -376,9 +351,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "v4",
     "content": "Updated content",
-    "updated_at": "2025-10-06T10:35:00Z"
   },
   "message": "Post updated successfully",
   "timestamp": "2025-10-06T10:35:00Z"
@@ -406,7 +379,6 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "v4",
     "is_liked": true/false,
   },
   "message": "Post liked/desliked successfully",
@@ -444,6 +416,8 @@ Authorization: Bearer <access_token>
 
 ### 5.2 Get Comments of a post
 **GET** `/posts/comments/<post-id>`
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Response:** `200 OK`
 ```json
@@ -501,7 +475,6 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "comment_id": "v4",
     "is_liked": true,
   },
   "message": "Comment liked successfully",
