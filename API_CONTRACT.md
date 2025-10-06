@@ -34,7 +34,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "user_id": "uuid-v4",
+    "user_id": "v4",
     "email": "user@example.com",
     "username": "johndoe",
     "created_at": "2025-10-06T10:30:00Z"
@@ -112,7 +112,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "user_id": "uuid-v4",
+    "user_id": "v4",
     "email": "user@example.com",
     "username": "johndoe",
     "bio": "Software developer and tech enthusiast",
@@ -139,14 +139,38 @@ Authorization: Bearer <access_token>
 ---
 
 ### 2.2 Update User Profile
-**PATCH** `/users/me`
+#### update profile bio
+**PUT** `/users/update/profile-bio/<user-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
 ```json
 {
-  "bio": "Updated bio",
+  "new_bio": "Updated bio"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "new_bio": "Updated bio"
+  },
+  "message": "Bio updated successfully",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
+
+#### update profile picture
+**PUT** `/users/update/profile-picture/<user-id>`
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
+{
   "profile_picture": "base64_encoded_image_or_url"
 }
 ```
@@ -156,12 +180,9 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "user_id": "uuid-v4",
-    "username": "johndoe",
-    "bio": "Updated bio",
     "profile_picture": "https://storage.com/profile.jpg"
   },
-  "message": "Profile updated successfully",
+  "message": "Profile picture updated successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
@@ -180,18 +201,20 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "user_id": "uuid-v4",
+      "user_id": "v5",
+      "username": "Maissen",
+      "profile_picture": "https://storage.com/profile.jpg",
+      "followers_count": 150,
+      "following_count": 200,
+    },
+    {
+      "user_id": "v4",
       "username": "johndoe",
       "profile_picture": "https://storage.com/profile.jpg",
-      "followers_count": 150
-    }
+      "followers_count": 150,
+      "following_count": 200,
+    },  
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "pages": 3
-  },
   "message": "Users retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -202,43 +225,30 @@ Authorization: Bearer <access_token>
 ## 3. Social Features
 
 ### 3.1 Follow User
-**POST** `/users/{user_id}/follow`
+**POST** `/users/follow-unfollow/<user_id>/<target_user_id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
-**Response:** `200 OK`
+**Request Body:**
 ```json
 {
-  "success": true,
   "data": {
-    "user_id": "uuid-v4",
-    "is_following": true
-  },
-  "message": "User followed successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
+    "user_id": "v4",
+    "target_user_id": "v5",
+  }
 }
 ```
 
-**Errors:**
-- `404` - User not found
-- `409` - Already following this user
-
----
-
-### 3.2 Unfollow User
-**DELETE** `/users/{user_id}/follow`
-
-**Headers:** `Authorization: Bearer <token>`
-
 **Response:** `200 OK`
 ```json
 {
   "success": true,
   "data": {
-    "user_id": "uuid-v4",
-    "is_following": false
+    "user_id": "v4",
+    "target_user_id": "v5",
+    "is_following": true/false
   },
-  "message": "User unfollowed successfully",
+  "message": "User followed/unfollowed successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
@@ -246,7 +256,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 3.3 Get Followers
-**GET** `/users/{user_id}/followers?page=1&limit=20`
+**GET** `/users/followers/<user-id>`
 
 **Response:** `200 OK`
 ```json
@@ -254,18 +264,16 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "user_id": "uuid-v4",
+      "user_id": "v4",
       "username": "janedoe",
       "profile_picture": "https://storage.com/profile.jpg",
-      "followers_count": 200
+    },
+    {
+      "user_id": "v4",
+      "username": "janedoe",
+      "profile_picture": "https://storage.com/profile.jpg",
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "pages": 8
-  },
   "message": "Followers retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -274,7 +282,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 3.4 Get Following
-**GET** `/users/{user_id}/following?page=1&limit=20`
+**GET** `/users/followings/<user-id>`
 
 **Response:** `200 OK`
 ```json
@@ -282,18 +290,11 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "user_id": "uuid-v4",
+      "user_id": "v4",
       "username": "janedoe",
       "profile_picture": "https://storage.com/profile.jpg",
-      "followers_count": 200
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 200,
-    "pages": 10
-  },
   "message": "Following list retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -315,8 +316,6 @@ Authorization: Bearer <access_token>
 {
   "content": "This is my post content",
   "media_urls": ["https://storage.com/image1.jpg"],
-  "topics": ["technology", "science"],
-  "visibility": "public"
 }
 ```
 
@@ -325,19 +324,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "uuid-v4",
-    "author": {
-      "user_id": "uuid-v4",
-      "username": "johndoe",
-      "profile_picture": "https://storage.com/profile.jpg"
-    },
-    "content": "This is my post content",
-    "media_urls": ["https://storage.com/image1.jpg"],
-    "topics": ["technology", "science"],
-    "likes_count": 0,
-    "comments_count": 0,
-    "created_at": "2025-10-06T10:30:00Z",
-    "updated_at": "2025-10-06T10:30:00Z"
+    "post_id": "v4",
   },
   "message": "Post created successfully",
   "timestamp": "2025-10-06T10:30:00Z"
@@ -346,45 +333,8 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 4.2 Get Post by ID
-**GET** `/posts/{post_id}`
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "post_id": "uuid-v4",
-    "author": {
-      "user_id": "uuid-v4",
-      "username": "johndoe",
-      "profile_picture": "https://storage.com/profile.jpg"
-    },
-    "content": "This is my post content",
-    "media_urls": ["https://storage.com/image1.jpg"],
-    "topics": ["technology", "science"],
-    "likes_count": 42,
-    "comments_count": 15,
-    "is_liked": false,
-    "created_at": "2025-10-06T10:30:00Z",
-    "updated_at": "2025-10-06T10:30:00Z"
-  },
-  "message": "Post retrieved successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
----
-
-### 4.3 Get Feed
-**GET** `/posts/feed?page=1&limit=20&topic=technology`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Query Parameters:**
-- `page` (optional, default: 1)
-- `limit` (optional, default: 20, max: 100)
-- `topic` (optional): Filter by topic
+### 4.2 Get Posts of a user
+**GET** `/posts/<user-id>`
 
 **Response:** `200 OK`
 ```json
@@ -392,28 +342,17 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "post_id": "uuid-v4",
-      "author": {
-        "user_id": "uuid-v4",
-        "username": "johndoe",
-        "profile_picture": "https://storage.com/profile.jpg"
-      },
+      "post_id": "v4",
       "content": "This is my post content",
       "media_urls": ["https://storage.com/image1.jpg"],
-      "topics": ["technology"],
       "likes_count": 42,
       "comments_count": 15,
       "is_liked": false,
-      "created_at": "2025-10-06T10:30:00Z"
+      "created_at": "2025-10-06T10:30:00Z",
+      "updated_at": "2025-10-06T10:30:00Z"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "pages": 8
-  },
-  "message": "Feed retrieved successfully",
+  "message": "Post retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
@@ -429,9 +368,9 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "post_id": "uuid-v4",
+      "post_id": "v4",
       "author": {
-        "user_id": "uuid-v4",
+        "user_id": "v4",
         "username": "johndoe",
         "profile_picture": "https://storage.com/profile.jpg"
       },
@@ -475,7 +414,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "uuid-v4",
+    "post_id": "v4",
     "content": "Updated content",
     "topics": ["technology", "ai"],
     "updated_at": "2025-10-06T10:35:00Z"
@@ -510,7 +449,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "uuid-v4",
+    "post_id": "v4",
     "is_liked": true,
     "likes_count": 43
   },
@@ -531,7 +470,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "post_id": "uuid-v4",
+    "post_id": "v4",
     "is_liked": false,
     "likes_count": 42
   },
@@ -562,10 +501,10 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "comment_id": "uuid-v4",
-    "post_id": "uuid-v4",
+    "comment_id": "v4",
+    "post_id": "v4",
     "author": {
-      "user_id": "uuid-v4",
+      "user_id": "v4",
       "username": "johndoe",
       "profile_picture": "https://storage.com/profile.jpg"
     },
@@ -590,9 +529,9 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "comment_id": "uuid-v4",
+      "comment_id": "v4",
       "author": {
-        "user_id": "uuid-v4",
+        "user_id": "v4",
         "username": "johndoe",
         "profile_picture": "https://storage.com/profile.jpg"
       },
@@ -635,7 +574,7 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "comment_id": "uuid-v4",
+    "comment_id": "v4",
     "is_liked": true,
     "likes_count": 6
   },
@@ -663,8 +602,8 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "url": "https://storage.com/images/uuid-v4.jpg",
-    "thumbnail_url": "https://storage.com/images/uuid-v4_thumb.jpg",
+    "url": "https://storage.com/images/v4.jpg",
+    "thumbnail_url": "https://storage.com/images/v4_thumb.jpg",
     "size": 1024000,
     "mime_type": "image/jpeg"
   },
@@ -694,8 +633,8 @@ Authorization: Bearer <access_token>
 {
   "success": true,
   "data": {
-    "url": "https://storage.com/videos/uuid-v4.mp4",
-    "thumbnail_url": "https://storage.com/videos/uuid-v4_thumb.jpg",
+    "url": "https://storage.com/videos/v4.mp4",
+    "thumbnail_url": "https://storage.com/videos/v4_thumb.jpg",
     "size": 50240000,
     "duration": 120,
     "mime_type": "video/mp4"
@@ -725,16 +664,16 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": [
     {
-      "notification_id": "uuid-v4",
+      "notification_id": "v4",
       "type": "like",
       "actor": {
-        "user_id": "uuid-v4",
+        "user_id": "v4",
         "username": "janedoe",
         "profile_picture": "https://storage.com/profile.jpg"
       },
       "target": {
         "type": "post",
-        "id": "uuid-v4"
+        "id": "v4"
       },
       "message": "janedoe liked your post",
       "is_read": false,
