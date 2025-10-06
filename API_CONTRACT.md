@@ -33,6 +33,15 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
+
 ### 1.2 Login
 **POST** `/auth/login`
 
@@ -63,6 +72,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 1.4 Logout
@@ -79,14 +96,14 @@ Development: http://localhost:8000/v1
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
-### error 
+
+**Response:** `error`
 ```json
-{
-  "success": false,
-  "data": null,
-  "message": "Failed to log out",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
 ```
 ---
 
@@ -117,14 +134,14 @@ Development: http://localhost:8000/v1
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
-### error 
+
+**Response:** `error`
 ```json
-{
-  "success": false,
-  "data": null,
-  "message": "Failed to load profile",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
 ```
 ---
 
@@ -153,6 +170,15 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
+
 #### update profile picture
 **PUT** `/users/update/profile-picture/<user-id>`
 
@@ -175,6 +201,15 @@ Development: http://localhost:8000/v1
   "message": "Profile picture updated successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
+```
+
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
 ```
 
 ---
@@ -201,6 +236,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ## 3. Social Features
@@ -223,6 +266,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 3.3 Get Followers
@@ -249,6 +300,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 3.4 Get Following
@@ -275,6 +334,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ## 4. Posts
@@ -304,6 +371,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 4.2 Get Posts of a user
@@ -332,6 +407,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 4.5 Update Post
@@ -358,6 +441,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 4.6 Delete Post
@@ -386,6 +477,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ## 5. Comments
@@ -412,6 +511,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 5.2 Get Comments of a post
@@ -454,6 +561,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 5.3 Delete Comment
@@ -482,6 +597,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ## 6. Media Upload
@@ -508,6 +631,14 @@ Development: http://localhost:8000/v1
 }
 ```
 
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed ",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 ---
 
 ### 5.4 User's feed
