@@ -1,0 +1,29 @@
+from pydantic import BaseModel, EmailStr
+from datetime import datetime, date
+from typing import Optional, Any, Dict
+
+
+class RegisterUserRequest(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+    date_of_birth: date
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class GenericResponse(BaseModel):
+    success: bool
+    data: Optional[Any] = None
+    message: str
+    timestamp: datetime
+
+
+class AuthResponse(BaseModel):
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    message: str
+    timestamp: datetime
