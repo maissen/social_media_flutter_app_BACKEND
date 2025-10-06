@@ -12,60 +12,6 @@ All authenticated endpoints require a JWT Bearer token in the Authorization head
 Authorization: Bearer <access_token>
 ```
 
-## Common Response Structure
-
-### Success Response
-```json
-{
-  "success": true,
-  "data": { },
-  "message": "Operation successful",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
-### Error Response
-```json
-{
-  "success": false,
-  "data": {
-    "code": "ERROR_CODE",
-    "details": { }
-  },
-  "message": "Human-readable error message",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
-### Pagination Response
-```json
-{
-  "success": true,
-  "data": [],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "pages": 5
-  },
-  "message": "",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-### Error Response
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "INVALID_PAGE",
-    "message": "The requested page number exceeds the available pages."
-  },
-  "message": "",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
 ---
 
 ## 1. Authentication & Authorization
@@ -98,12 +44,6 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Errors:**
-- `400` - Invalid input (weak password, invalid email)
-- `409` - Email or username already exists
-
----
-
 ### 1.2 Login
 **POST** `/auth/login`
 
@@ -121,46 +61,14 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "token_type": "bearer",
     "expires_in": 3600,
     "user": {
-      "user_id": "uuid-v4",
       "email": "user@example.com",
       "username": "johndoe",
       "profile_picture": "https://storage.com/profile.jpg"
     }
   },
   "message": "Login successful",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
-**Errors:**
-- `401` - Invalid credentials
-- `429` - Too many login attempts
-
----
-
-### 1.3 Refresh Token
-**POST** `/auth/refresh`
-
-**Request Body:**
-```json
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600
-  },
-  "message": "Token refreshed successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
@@ -181,13 +89,21 @@ Authorization: Bearer <access_token>
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
-
+### error 
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Failed to log out",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
 ---
 
 ## 2. User Management
 
 ### 2.1 Get Current User Profile
-**GET** `/users/me`
+**GET** `/users/profile/<user-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -204,13 +120,22 @@ Authorization: Bearer <access_token>
     "followers_count": 150,
     "following_count": 200,
     "posts_count": 45,
-    "created_at": "2025-01-15T10:30:00Z"
+    "created_at": "2025-01-15T10:30:00Z",
+    "i_am_a_follower": true
   },
   "message": "User profile retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
-
+### error 
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Failed to load profile",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
 ---
 
 ### 2.2 Update User Profile
