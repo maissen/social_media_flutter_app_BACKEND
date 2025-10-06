@@ -507,3 +507,33 @@ Development: http://localhost:8000/v1
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
+
+---
+
+### 5.4 User's feed
+**GET** `feed/`
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  {
+    "post_id": "v10",
+    "author": {
+      "user_id": "v5",
+      "username": "janedoe",
+      "profile_picture": "https://storage.com/profile.jpg"
+    },
+    "content": "Just got a new job!",
+    "media_url": "https://storage.com/image1.jpg",
+    "likes_count": 120,
+    "comments_count": 18,
+    "is_liked": false,
+    "created_at": "2025-10-06T09:00:00Z"
+  },
+  "message": "Comment liked successfully",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
