@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, UploadFile, status
-from src.posts_crud import insert_new_post, get_posts_count
+from src.posts_crud import get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import PostSchema
 from src.core.security import get_current_user_from_token
@@ -78,5 +78,65 @@ async def create_post(
             success=False,
             data=None,
             message="Failed to create post",
+            timestamp=datetime.utcnow()
+        )
+
+
+
+@router.get("/{post_id}", response_model=GenericResponse)
+def get_post(post_id: int, current_user=Depends(get_current_user_from_token)):
+    """
+    Retrieve a single post by its ID.
+    Requires a valid JWT token.
+    """
+    try:
+        post = get_a_single_post(post_id)
+        if not post:
+            return GenericResponse(
+                success=False,
+                data=None,
+                message="Post not found",
+                timestamp=datetime.utcnow()
+            )
+
+        return GenericResponse(
+            success=True,
+            data=post,
+            message="Post retrieved successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed to retrieve post",
+            timestamp=datetime.utcnow()
+        )
+    
+
+
+@router.get("/user/{user_id}", response_model=GenericResponse)
+def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_token)):
+    """
+    Retrieve all posts for a specific user.
+    Requires a valid JWT token.
+    """
+    try:
+        posts = get_posts_of_user(user_id)
+        return GenericResponse(
+            success=True,
+            data=posts,
+            message=f"Retrieved {len(posts)} post(s) for user {user_id}",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed to retrieve posts",
             timestamp=datetime.utcnow()
         )

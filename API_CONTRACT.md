@@ -402,12 +402,13 @@ Development: http://localhost:8000/v1
   "data": [
     {
       "post_id": "v4",
+      "user_id": "v1",
       "content": "This is my post content",
       "media_url": "https://storage.com/image1.jpg",
-      "likes_count": 42,
-      "comments_count": 15,
-      "is_liked": false,
       "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 42,
+      "comments_nbr": 15,
+      "is_liked": false,
     }
   ],
   "message": "Post retrieved successfully",
