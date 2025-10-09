@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
-from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture
+from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
@@ -133,53 +133,51 @@ def update_profile_picture(
         )
     
 
-# @router.get("/search", response_model=GenericResponse)
-# def search_users(
-#     username: str = Query(..., min_length=1, description="Username to search for"),
-# ):
-#     """
-#     Search for users by username.
-#     Returns users whose username contains the search query (case-insensitive).
-#     """
-#     try:
-#         # Search for users with matching username (case-insensitive)
-#         matching_users = [
-#             user for user in users_db
-#             if username.lower() in user.username.lower()
-#         ]
+@router.get("/search", response_model=GenericResponse)
+def search_users(
+    username: str = Query(..., min_length=1, description="Username to search for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Search for users by username.
+    Returns users whose username contains the search username (case-insensitive).
+    """
+    try:
+        # Search for users with matching username (case-insensitive)
+        matching_users = find_matching_username(username=username)
         
-#         # Format the results
-#         results = []
-#         for user in matching_users:
-#             results.append(get_user_by_id(user.user_id))
-
-#         if not matching_users:
-#             return GenericResponse(
-#                 success=True,
-#                 message="No users found",
-#                 timestamp=datetime.utcnow()
-#             )
+        if not matching_users or matching_users == []:
+            return GenericResponse(
+                success=True,
+                message="No users found",
+                timestamp=datetime.utcnow()
+            )
         
-#         # Convert to schema
-#         results = [UserSearchedSchema(
-#             user_id=user.user_id,
-#             email=user.email,
-#             username=user.username,
-#             profile_picture=user.profile_picture
-#         ) for user in matching_users]
+        # Format the results
+        results = []
+        for user in matching_users:
+            results.append(get_user_by_id(user.user_id))
         
-#         return GenericResponse(
-#             success=True,
-#             data=results,
-#             message="Users retrieved successfully",
-#             timestamp=datetime.utcnow()
-#         )
+        # Convert to schema
+        results = [UserSearchedSchema(
+            user_id=user.user_id,
+            email=user.email,
+            username=user.username,
+            profile_picture=user.profile_picture
+        ) for user in matching_users]
+        
+        return GenericResponse(
+            success=True,
+            data=results,
+            message="Users retrieved successfully",
+            timestamp=datetime.utcnow()
+        )
     
-#     except Exception as e:
-#         print(e)
-#         return GenericResponse(
-#             success=False,
-#             data=None,
-#             message="Failed",
-#             timestamp=datetime.utcnow()
-#         )
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed",
+            timestamp=datetime.utcnow()
+        )

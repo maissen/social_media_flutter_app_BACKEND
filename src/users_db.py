@@ -1,5 +1,5 @@
 import pickle
-from typing import Optional
+from typing import List, Optional
 from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
 
 DB_FILE = "users_database.dat"
@@ -55,3 +55,19 @@ def update_user_profile_picture(user_id: int, payload: UpdateProfilePictureReque
             save_users(users)
             return user
     return None  # User not found
+
+
+def find_matching_username(username: str) -> List[UserSchema]:
+    """
+    Search for users whose username contains the username (case-insensitive).
+
+    Args:
+        username (str): Substring to search for in usernames.
+
+    Returns:
+        List[UserSchema]: List of matching users.
+    """
+    username = username.lower()
+    users = load_users()
+    matching_users = [user for user in users if username in user.username.lower()]
+    return matching_users
