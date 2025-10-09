@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, UploadFile, status
-from src.posts_crud import get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count
+from src.posts_crud import get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, update_a_post
 from src.schemas.generic_response import GenericResponse
-from src.schemas.posts import PostSchema
+from src.schemas.posts import PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
 from src.users_crud import increment_posts_count_of_user, decrement_posts_count_of_user
 
@@ -109,3 +109,52 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
             message="Failed to retrieve posts",
             timestamp=datetime.utcnow()
         )
+    
+
+
+@router.put("/update/{post_id}", response_model=GenericResponse)
+def update_post(
+    post_id: int,
+    payload: UpdatePostSchema,
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Update the content of a post.
+    Only the user who created the post can update it.
+    """
+    post = get_a_single_post(post_id)
+    if not post:
+        return GenericResponse(
+            success=False,
+            message="couldn't find post",
+            timestamp=datetime.utcnow()
+        )
+
+    if post.user_id != current_user.user_id:
+        return GenericResponse(
+            success=False,
+            message="You need to be the owner of the post in order to update it",
+            timestamp=datetime.utcnow()
+        )
+    
+    if payload.new_content == "": 
+        return GenericResponse(
+            success=False,
+            message="Please provide the new text to update post",
+            timestamp=datetime.utcnow()
+        )
+
+    updated_post = update_a_post(post_id, payload.new_content)
+    if not updated_post:
+        return GenericResponse(
+            success=False,
+            message="Failed to update post",
+            timestamp=datetime.utcnow()
+        )
+
+    return GenericResponse(
+        success=True,
+        data=updated_post,
+        message="Post updated successfully",
+        timestamp=datetime.utcnow()
+    )
