@@ -1,10 +1,11 @@
 import os
 from datetime import datetime
+from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.comments_crud import create_comment, decrement_likes_count_of_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_likes_of_comment, increment_likes_count_of_comment, is_comment_liked_by_me, like_comment_of_post
+from src.comments_crud import create_comment, decrement_likes_count_of_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, get_likes_of_comment, increment_likes_count_of_comment, is_comment_liked_by_me, like_comment_of_post
 from src.posts_crud import decrement_comments_count_of_post, delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
-from src.schemas.posts import CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
+from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
 from src.users_crud import increment_posts_count_of_user, decrement_posts_count_of_user
 
@@ -405,5 +406,34 @@ def toggle_like_comment(
             success=False,
             data=None,
             message="An unexpected error occurred",
+            timestamp=datetime.utcnow()
+        )
+    
+
+@router.get("/comments/all", response_model=GenericResponse)
+def get_comments(
+    post_id: int = Query(..., description="ID of the post to retrieve comments for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Get all comments of a given post as CommentProfile objects.
+    Does not include likes or is_liked_by_me.
+    """
+    try:
+        comments: List[CommentProfile] = get_comments_of_post(post_id)
+
+        return GenericResponse(
+            success=True,
+            data=comments,
+            message="Comments retrieved successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=[],
+            message="Failed to retrieve comments",
             timestamp=datetime.utcnow()
         )

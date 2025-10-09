@@ -43,6 +43,7 @@ def create_comment(current_user, post_id: int, content: str) -> CommentProfile:
 
 def get_comments_of_post(post_id: int) -> List[CommentProfile]:
     comments = load_comments()
+    
     return [c for c in comments if c.post_id == post_id]
 
 def delete_comment_of_post(comment_id: int, post_id: int) -> bool:

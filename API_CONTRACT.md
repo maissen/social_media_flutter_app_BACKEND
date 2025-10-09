@@ -531,7 +531,7 @@ Development: http://localhost:8000/v1
 ---
 
 ### 5.2 Get Comments of a post
-**GET** `/posts/comments/<post-id>`
+**GET** `/posts/comments/all?post_id=1`
 
 **Headers:** `Authorization: Bearer <token>`
 
