@@ -100,7 +100,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/logout", response_model=GenericResponse)
 def logout(token: str = Depends(logout_user)):
+
     """Logout user by invalidating the token."""
+    
     try:
         return GenericResponse(
             success=True,
@@ -109,8 +111,9 @@ def logout(token: str = Depends(logout_user)):
             timestamp=datetime.utcnow()
         )
     except Exception as e:
+        print(e)
         return GenericResponse(
             success=False,
-            message=f"Failed: {str(e)}",
+            message=f"Failed to logout",
             timestamp=datetime.utcnow()
         )
