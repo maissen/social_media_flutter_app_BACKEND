@@ -6,7 +6,8 @@ from fastapi import Depends, HTTPException, status
 from datetime import datetime
 from jose import jwt, JWTError
 from src.users_db import get_user_by_id
-from src.core.config import settings
+from src.schemas.users import UserSchema
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,7 +31,7 @@ def create_access_token(data: dict, expires_delta: int = 36000):
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")  # URL of your login endpoint
 
 
-def get_current_user_from_token(token: str = Depends(oauth2_scheme)):
+def get_current_user_from_token(token: str = Depends(oauth2_scheme)) -> UserSchema:
     """Decode JWT token and return the current user object."""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

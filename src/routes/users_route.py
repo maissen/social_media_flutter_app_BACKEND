@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
-from src.users_db import get_user_by_id
+from src.users_db import get_user_by_id, update_user_bio
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
@@ -52,44 +52,42 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
             timestamp=datetime.utcnow()
         )  
 
-# @router.put("/update/bio/{user_id}", response_model=GenericResponse)
-# def update_user_bio(
-#     user_id: int,
-#     payload: UpdateBioRequest,
-# ):
-#     """Update user bio."""
-#     try:
-#         # Find the user in the database
-#         user = get_user_by_id(user_id)
-        
-#         if not user:
-#             return GenericResponse(
-#                 success=False,
-#                 data=None,
-#                 message="User not found",
-#                 timestamp=datetime.utcnow()
-#             )
-        
-#         # Update the bio
-#         user.bio = payload.new_bio
-        
-#         return GenericResponse(
-#             success=True,
-#             data={
-#                 "new_bio": payload.new_bio
-#             },
-#             message="Bio updated successfully",
-#             timestamp=datetime.utcnow()
-#         )
+@router.put("/update/bio", response_model=GenericResponse)
+def update_user_bio(
+    payload: UpdateBioRequest,
+    current_user=Depends(get_current_user_from_token)
+):
     
-#     except Exception as e:
-#         print(e)
-#         return GenericResponse(
-#             success=False,
-#             data=None,
-#             message="Failed",
-#             timestamp=datetime.utcnow()
-#         )
+    """Update user bio."""
+    try:
+        if not current_user:
+            return GenericResponse(
+                success=False,
+                data=None,
+                message="User not found",
+                timestamp=datetime.utcnow()
+            )
+        
+        # Update the bio
+        update_user_bio(user_id=current_user.user_id, payload=payload.new_bio)
+        
+        return GenericResponse(
+            success=True,
+            data={
+                "new_bio": payload.new_bio
+            },
+            message="Bio updated successfully",
+            timestamp=datetime.utcnow()
+        )
+    
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed",
+            timestamp=datetime.utcnow()
+        )
 
 
 # @router.put("/update/profile-picture/{user_id}", response_model=GenericResponse)

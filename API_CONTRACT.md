@@ -147,7 +147,7 @@ Development: http://localhost:8000/v1
 
 ### 2.2 Update User Profile
 #### update profile bio
-**PUT** `/users/update/bio/<user-id>`
+**PUT** `/users/update/bio`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -180,7 +180,7 @@ Development: http://localhost:8000/v1
 ```
 
 #### update profile picture
-**PUT** `/users/update/profile-picture/<user-id>`
+**PUT** `/users/update/profile-picture`
 
 **Headers:** `Authorization: Bearer <token>`
 
