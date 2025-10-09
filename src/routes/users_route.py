@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
-from src.users_db import get_user_by_id, update_user_bio
+from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
@@ -90,49 +90,47 @@ def update_user_bio(
         )
 
 
-# @router.put("/update/profile-picture/{user_id}", response_model=GenericResponse)
-# def update_profile_picture(
-#     user_id: int,
-#     payload: UpdateProfilePictureRequest,
-# ):
-#     """Update user profile picture."""
-#     try:
-#         # Find the user in the database
-#         user = get_user_by_id(user_id)
+@router.put("/update/profile-picture", response_model=GenericResponse)
+def update_profile_picture(
+    payload: UpdateProfilePictureRequest, 
+    current_user=Depends(get_current_user_from_token)
+):
+    """Update user profile picture."""
+    try:
         
-#         if not user:
-#             return GenericResponse(
-#                 success=False,
-#                 data=None,
-#                 message="User not found",
-#                 timestamp=datetime.utcnow()
-#             )
+        if not current_user:
+            return GenericResponse(
+                success=False,
+                data=None,
+                message="User not found",
+                timestamp=datetime.utcnow()
+            )
         
-#         # Update the profile picture
-#         # In a real application, you would:
-#         # 1. Upload the base64/file to cloud storage (S3, Cloudinary, etc.)
-#         # 2. Get the URL back from the storage service
-#         # 3. Store that URL in the database
-#         # For now, we'll just store the provided value
-#         user.profile_picture = payload.profile_picture
-        
-#         return GenericResponse(
-#             success=True,
-#             data={
-#                 "profile_picture": user.profile_picture
-#             },
-#             message="Profile picture updated successfully",
-#             timestamp=datetime.utcnow()
-#         )
+        # Update the profile picture
+        print("current user " + str(current_user.user_id))
+        current_user.profile_picture = payload.profile_picture
+
+        update_user_profile_picture(
+            user_id=current_user.user_id,
+            payload=UpdateProfilePictureRequest(profile_picture=current_user.profile_picture)
+        )
+        return GenericResponse(
+            success=True,
+            data={
+                "profile_picture": current_user.profile_picture
+            },
+            message="Profile picture updated successfully",
+            timestamp=datetime.utcnow()
+        )
     
-#     except Exception as e:
-#         print(e)
-#         return GenericResponse(
-#             success=False,
-#             data=None,
-#             message="Failed",
-#             timestamp=datetime.utcnow()
-#         )
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed",
+            timestamp=datetime.utcnow()
+        )
     
 
 # @router.get("/search", response_model=GenericResponse)
