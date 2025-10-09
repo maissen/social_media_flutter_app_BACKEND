@@ -374,12 +374,10 @@ def toggle_like_comment(
             # User already liked → remove like
             success = dislike_comment_of_post(comment_id, user_id)
             action = "disliked"
-            decrement_likes_count_of_comment(comment_id=comment_id)
         else:
             # User has not liked → add like
             success = like_comment_of_post(comment_id, user_id)
             action = "liked"
-            increment_likes_count_of_comment(comment_id=comment_id)
 
         if not success:
             return GenericResponse(
