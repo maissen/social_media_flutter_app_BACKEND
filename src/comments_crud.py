@@ -120,3 +120,17 @@ def get_likes_of_comment(comment_id: int) -> int:
     comments = load_comments()
     comment = next((c for c in comments if c.comment_id == comment_id), None)
     return comment.likes_nbr if comment else 0
+
+
+def get_likes_count_of_comment(comment_id: int) -> int:
+    """
+    Get the number of likes for a given comment using likes_database.dat.
+
+    Args:
+        comment_id (int): ID of the comment.
+
+    Returns:
+        int: Number of likes for the comment.
+    """
+    likes = load_likes()
+    return sum(1 for c_id, _ in likes if c_id == comment_id)
