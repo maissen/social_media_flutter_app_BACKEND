@@ -7,8 +7,8 @@ class UserSchema(BaseModel):
     email: str
     username: str
     password: str
-    bio: Optional[str] = None
-    profile_picture: Optional[str] = None
+    bio: Optional[str] = ""
+    profile_picture: Optional[str] = ""
     date_of_birth: date
     created_at: datetime
 

@@ -30,8 +30,8 @@ def register_user(payload: RegisterUserRequest):
             email=payload.email,
             username=payload.username,
             password=get_password_hash(payload.password),
-            profile_picture=None,
-            bio=None,
+            profile_picture="",
+            bio="",
             date_of_birth=payload.date_of_birth,
             created_at=datetime.utcnow()
         )
