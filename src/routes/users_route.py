@@ -3,12 +3,12 @@ from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id
-from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
+from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
 
 
-@router.get("/profile/{user_id}", response_model=UserProfileSchema)
+@router.get("/profile/{user_id}", response_model=GenericResponse)
 def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_token)):
     """Get user profile by user ID. Requires a valid JWT token."""
     try:
@@ -18,13 +18,12 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
         if not user:
             return GenericResponse(
                 success=False,
-                data=None,
                 message="User not found",
                 timestamp=datetime.utcnow()
             )
 
-        # Convert UserSchema to UserProfileSchema
-        user_profile = UserProfileSchema(
+        # Convert UserSchema to UserSchema
+        user_profile = UserSchema(
             user_id=user.user_id,
             email=user.email,
             username=user.username,
