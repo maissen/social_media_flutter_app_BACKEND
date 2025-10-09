@@ -4,6 +4,8 @@ from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
+from src.followers_db import check_following_status, follow, unfollow
+
 
 router = APIRouter(prefix="", tags=["User Management"])
 
@@ -179,5 +181,57 @@ def search_users(
             success=False,
             data=None,
             message="Failed",
+            timestamp=datetime.utcnow()
+        )
+    
+
+@router.post("/follow-unfollow", response_model=GenericResponse)
+def follow_unfollow(
+    target_user_id: int,
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Toggle following/unfollowing a target user.
+    If already following, it will unfollow; otherwise, it will follow.
+    """
+    try:
+        if current_user.user_id == target_user_id:
+            return GenericResponse(
+                success=False,
+                message="You cannot follow/unfollow yourself",
+                timestamp=datetime.utcnow()
+            )
+
+        if check_following_status(current_user.user_id, target_user_id):
+            # Already following → unfollow
+            success = unfollow(current_user.user_id, target_user_id)
+            action = "unfollowed"
+        else:
+            # Not following → follow
+            success = follow(current_user.user_id, target_user_id)
+            action = "followed"
+
+        if not success:
+            return GenericResponse(
+                success=False,
+                message="Failed to update follow status",
+                timestamp=datetime.utcnow()
+            )
+
+        return GenericResponse(
+            success=True,
+            data={
+                "is_following": check_following_status(current_user.user_id, target_user_id)
+            },
+            message=f"User {action} successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="An unexpected error occurred",
             timestamp=datetime.utcnow()
         )

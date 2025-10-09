@@ -249,7 +249,7 @@ Development: http://localhost:8000/v1
 ## 3. Social Features
 
 ### 3.1 Follow User
-**POST** `/users/follow-unfollow/<user_id>/<target_user_id>`
+**POST** `/users/follow-unfollow/<target_user_id>`
 
 **Headers:** `Authorization: Bearer <token>`
 
