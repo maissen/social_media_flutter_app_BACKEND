@@ -11,6 +11,9 @@ def load_users() -> list[UserSchema]:
             return pickle.load(f)
     except (FileNotFoundError, EOFError):
         return []
+    
+def get_new_user_id():
+    return len(load_users()) + 1
 
 def save_users(users: list[UserSchema]):
     """Save users to the file."""
