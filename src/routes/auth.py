@@ -5,7 +5,7 @@ from src.schemas.generic_response import GenericResponse
 from src.core.security import get_password_hash, verify_password, create_access_token
 from src.services.auth_service import logout_user
 import uuid
-from src.users_db import users_db, get_user_by_email
+from src.users_db import users_db, get_user_by_email, insert_user
 from src.schemas.users import UserSchema
 
 router = APIRouter(prefix="", tags=["Authentication"])
@@ -37,7 +37,7 @@ def register_user(payload: RegisterUserRequest):
         )
 
         # add user to db
-        users_db.append(user)
+        insert_user(user=user)
 
         return GenericResponse(
             success=True,
@@ -52,6 +52,7 @@ def register_user(payload: RegisterUserRequest):
             message="Oops, failed to register user",
             timestamp=datetime.utcnow()
         )
+
 
 @router.post("/login", response_model=GenericResponse)
 def login(payload: LoginRequest):
