@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.schemas.auth import RegisterUserRequest, LoginRequest, AuthResponse, GenericResponse
+from app.schemas.auth import RegisterUserRequest, LoginRequest, GenericResponse
 from app.database import get_db
 from app.models.user import User
 from app.core.security import get_password_hash, verify_password, create_access_token
@@ -50,18 +50,31 @@ def register_user(payload: RegisterUserRequest, db: Session = Depends(get_db)):
         )
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=GenericResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    """Authenticate and return access token."""
+
+    #! """Authenticate and return access token."""
+
     try:
         user = db.query(User).filter(User.email == payload.email).first()
-        if not user or not verify_password(payload.password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not user:
+            return GenericResponse(
+                success=False,
+                message=f"Failed, please submit a valid data",
+                timestamp=datetime.utcnow()
+            )
+        
+        if not verify_password(payload.password, user.hashed_password):
+            return GenericResponse(
+                success=False,
+                message=f"Your password is wrong",
+                timestamp=datetime.utcnow()
+            )
 
         token = create_access_token(data={"sub": str(user.id)})
-        expires_in = 3600  # 1 hour
+        expires_in = 36000  # 10 hour
 
-        return AuthResponse(
+        return GenericResponse(
             success=True,
             data={
                 "access_token": token,
@@ -77,9 +90,10 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             timestamp=datetime.utcnow()
         )
     except Exception as e:
-        return AuthResponse(
+        print(e)
+        return GenericResponse(
             success=False,
-            message=f"Failed: {str(e)}",
+            message=f"An error occured",
             timestamp=datetime.utcnow()
         )
 

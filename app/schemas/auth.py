@@ -21,9 +21,3 @@ class GenericResponse(BaseModel):
     message: str
     timestamp: datetime
 
-
-class AuthResponse(BaseModel):
-    success: bool
-    data: Optional[Dict[str, Any]] = None
-    message: str
-    timestamp: datetime
