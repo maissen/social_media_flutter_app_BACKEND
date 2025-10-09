@@ -32,8 +32,8 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
             username=user.username,
             bio=user.bio,
             profile_picture=user.profile_picture,
-            followers_count=user.followers_count,
-            following_count=user.following_count,
+            followers_count=len(get_followers_of_user(user_id=user_id)),
+            following_count=len(get_followings_of_user(user_id=user_id)),
             posts_count=user.posts_count,
             created_at=user.created_at,
             is_following=user.is_following
