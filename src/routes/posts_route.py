@@ -273,21 +273,22 @@ def like_or_dislike_post(
     
 
 
-@router.post("/comments/create/{post_id}", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/comments/create", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
 def create_new_comment(
-    comment: CreateOrUpdateCommentSchema,
-    post_id: int,
+    content: CreateOrUpdateCommentSchema,
+    post_id: int = Query(..., description="ID of the post to comment on"),
     current_user=Depends(get_current_user_from_token)
 ):
     """
     Create a new comment on a post.
+    The post_id is provided as a query parameter.
     """
     try:
-        comment = create_comment(current_user, post_id, comment.content)
+        comment = create_comment(current_user, post_id, content.content)
 
         return GenericResponse(
             success=True,
-            data=comment,
+            data=comment.dict(),
             message="Comment created successfully",
             timestamp=datetime.utcnow()
         )
