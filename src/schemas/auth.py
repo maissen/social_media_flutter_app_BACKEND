@@ -6,7 +6,6 @@ class RegisterUserRequest(BaseModel):
     email: EmailStr
     username: str
     password: str
-    date_of_birth: date
 
 
 class LoginRequest(BaseModel):

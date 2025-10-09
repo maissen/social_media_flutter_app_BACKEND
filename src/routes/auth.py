@@ -18,7 +18,6 @@ def register_user(payload: RegisterUserRequest):
         if existing_user:
             return GenericResponse(
                 success=False,
-                data=None,
                 message="Email already exists",
                 timestamp=datetime.utcnow()
             )
@@ -39,7 +38,6 @@ def register_user(payload: RegisterUserRequest):
 
         return GenericResponse(
             success=True,
-            data=None,
             message="User registered successfully",
             timestamp=datetime.utcnow()
         )
