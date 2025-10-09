@@ -617,7 +617,7 @@ Development: http://localhost:8000/v1
 
 ## 6. Media Upload
 
-### 6.1 Upload Image
+### 6.1 Upload profile picture
 **POST** `/upload/image`
 
 **Headers:** 
@@ -632,7 +632,7 @@ Development: http://localhost:8000/v1
 {
   "success": true,
   "data": {
-    "thumbnail_url": "https://storage.com/images/v4_thumb.jpg",
+    "profile_picture_url": "https://storage.com/images/v4_thumb.jpg",
   },
   "message": "Image uploaded successfully",
   "timestamp": "2025-10-06T10:30:00Z"
