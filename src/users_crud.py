@@ -93,3 +93,24 @@ def decrement_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
             save_users(users)
             return user
     return None  # User not found
+
+
+def update_user_profile_picture(file: str, user_id: int) -> Optional[UserSchema]:
+    """
+    Update a user's profile picture with the given file path or filename
+    and save the updated user list to the file database.
+
+    Args:
+        file (str): Path or filename of the uploaded profile picture.
+        user_id (int): ID of the user to update.
+
+    Returns:
+        Optional[UserSchema]: The updated user object, or None if not found.
+    """
+    users = load_users()
+    for user in users:
+        if user.user_id == user_id:
+            user.profile_picture = file
+            save_users(users)
+            return user
+    return None  # User not found
