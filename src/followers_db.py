@@ -76,8 +76,6 @@ def get_followers_of_user(user_id: int) -> List[UserSearchedSchema]:
     Returns:
         List[UserSearchedSchema]: List of followers with basic info.
     """
-    from followers_db import load_followers  # Ensure we use the correct DB
-    
     # Load followers database
     followers_list = load_followers()
     
