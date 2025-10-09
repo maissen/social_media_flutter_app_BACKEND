@@ -7,16 +7,21 @@ from app.models.user import User
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.services.auth_service import logout_user
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="", tags=["Authentication"])
 
 
 @router.post("/register", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: RegisterUserRequest, db: Session = Depends(get_db)):
-    """Register a new user."""
+
     try:
         existing_user = db.query(User).filter(User.email == payload.email).first()
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            return GenericResponse(
+                success=False,
+                data=None,
+                message="Email already exists",
+                timestamp=datetime.utcnow()
+            )
 
         user = User(
             email=payload.email,
@@ -37,9 +42,10 @@ def register_user(payload: RegisterUserRequest, db: Session = Depends(get_db)):
         )
     except Exception as e:
         db.rollback()
+        print(f"e")
         return GenericResponse(
             success=False,
-            message=f"Failed: {str(e)}",
+            message=f"Oops, failed to register user",
             timestamp=datetime.utcnow()
         )
 
