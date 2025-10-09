@@ -29,15 +29,14 @@ def register_user(payload: RegisterUserRequest):
             user_id=len(users_db) + 1,
             email=payload.email,
             username=payload.username,
+            password=get_password_hash(payload.password),
             profile_picture=None,
             bio=None,
             date_of_birth=payload.date_of_birth,
             created_at=datetime.utcnow()
         )
 
-        # Store hashed password separately (you could also include it in the object)
-        user.password = get_password_hash(payload.password)
-
+        # add user to db
         users_db.append(user)
 
         return GenericResponse(

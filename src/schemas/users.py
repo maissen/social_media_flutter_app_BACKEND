@@ -6,6 +6,7 @@ class UserSchema(BaseModel):
     user_id: int
     email: str
     username: str
+    password: str
     bio: Optional[str] = None
     profile_picture: Optional[str] = None
     date_of_birth: date
