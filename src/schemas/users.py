@@ -22,3 +22,10 @@ class UpdateBioRequest(BaseModel):
 
 class UpdateProfilePictureRequest(BaseModel):
     profile_picture: str
+
+
+class UserSearchedSchema(BaseModel):
+    user_id: int
+    email: str
+    username: str
+    profile_picture: Optional[str] = ""

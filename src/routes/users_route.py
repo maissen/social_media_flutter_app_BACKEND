@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from datetime import datetime
 from src.schemas.generic_response import GenericResponse
-from src.users_db import get_user_by_id
-from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest
+from src.users_db import get_user_by_id, users_db
+from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
 
@@ -132,6 +132,58 @@ def update_profile_picture(
                 "profile_picture": user.profile_picture
             },
             message="Profile picture updated successfully",
+            timestamp=datetime.utcnow()
+        )
+    
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed",
+            timestamp=datetime.utcnow()
+        )
+    
+
+@router.get("/search", response_model=GenericResponse)
+def search_users(
+    username: str = Query(..., min_length=1, description="Username to search for"),
+):
+    """
+    Search for users by username.
+    Returns users whose username contains the search query (case-insensitive).
+    """
+    try:
+        # Search for users with matching username (case-insensitive)
+        matching_users = [
+            user for user in users_db
+            if username.lower() in user.username.lower()
+        ]
+        
+        # Format the results
+        results = []
+        for user in matching_users:
+            results.append(get_user_by_id(user.user_id))
+
+        if not matching_users:
+            return GenericResponse(
+                success=True,
+                message="No users found",
+                timestamp=datetime.utcnow()
+            )
+        
+        # Convert to schema
+        results = [UserSearchedSchema(
+            user_id=user.user_id,
+            email=user.email,
+            username=user.username,
+            profile_picture=user.profile_picture
+        ) for user in matching_users]
+        
+        return GenericResponse(
+            success=True,
+            data=results,
+            message="Users retrieved successfully",
             timestamp=datetime.utcnow()
         )
     
