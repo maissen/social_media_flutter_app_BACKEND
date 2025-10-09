@@ -9,8 +9,23 @@ class UserSchema(BaseModel):
     password: str
     bio: Optional[str] = ""
     profile_picture: Optional[str] = ""
-    date_of_birth: date
     created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class UserProfileSchema(BaseModel):
+    user_id: int
+    email: str
+    username: str
+    bio: Optional[str] = ""
+    profile_picture: Optional[str] = ""
+    followers_count: int = 0
+    following_count: int = 0
+    posts_count: int = 0
+    created_at: datetime
+    is_following: bool = False
+
 
     class Config:
         orm_mode = True

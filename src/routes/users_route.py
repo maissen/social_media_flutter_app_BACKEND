@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from datetime import datetime
+from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id
-from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserSearchedSchema
+from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
 
 
-@router.get("/profile/{user_id}", response_model=GenericResponse)
-def get_user_profile(user_id: int):
-    """Get user profile by user ID."""
+@router.get("/profile/{user_id}", response_model=UserProfileSchema)
+def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_token)):
+    """Get user profile by user ID. Requires a valid JWT token."""
     try:
-        # Find the user by ID
+        # The logged-in user is `current_user`
         user = get_user_by_id(user_id)
         
         if not user:
@@ -21,31 +22,24 @@ def get_user_profile(user_id: int):
                 message="User not found",
                 timestamp=datetime.utcnow()
             )
-        
-        # Check if current user is following this user
-        # Since we don't have a followers system yet, we'll set this to False
-        is_following = False
-        
-        # Count followers, following, and posts
-        # Since we don't have these systems yet, we'll set them to 0
-        followers_count = 0
-        following_count = 0
-        posts_count = 0
-        
+
+        # Convert UserSchema to UserProfileSchema
+        user_profile = UserProfileSchema(
+            user_id=user.user_id,
+            email=user.email,
+            username=user.username,
+            bio=user.bio,
+            profile_picture=user.profile_picture,
+            followers_count=0,
+            following_count=0,
+            posts_count=0,
+            created_at=user.created_at,
+            is_following=False
+        )
+
         return GenericResponse(
             success=True,
-            data={
-                "user_id": user.user_id,
-                "email": user.email,
-                "username": user.username,
-                "bio": user.bio,
-                "profile_picture": user.profile_picture,
-                "followers_count": followers_count,
-                "following_count": following_count,
-                "posts_count": posts_count,
-                "created_at": user.created_at.isoformat() + "Z",
-                "is_following": is_following
-            },
+            data=user_profile,
             message="User profile retrieved successfully",
             timestamp=datetime.utcnow()
         )
@@ -57,8 +51,7 @@ def get_user_profile(user_id: int):
             data=None,
             message="Failed",
             timestamp=datetime.utcnow()
-        )
-    
+        )  
 
 # @router.put("/update/bio/{user_id}", response_model=GenericResponse)
 # def update_user_bio(

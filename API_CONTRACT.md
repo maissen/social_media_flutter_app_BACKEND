@@ -109,7 +109,7 @@ Development: http://localhost:8000/v1
 
 ## 2. User Management
 
-### 2.1 Get Current User Profile
+### 2.1 Get User Profile
 **GET** `/users/profile/<user-id>`
 
 **Headers:** `Authorization: Bearer <token>`
