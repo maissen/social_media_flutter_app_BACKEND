@@ -4,11 +4,13 @@ from typing import List, Optional
 
 class CommentProfile(BaseModel):
     comment_id: int
+    post_id: int
     user_id: int
     username: str
     profile_picture: Optional[str] = ""
     comment_payload: str
     created_at: datetime
+    likes_nbr: int = 0
 
     class Config:
         orm_mode = True
