@@ -581,7 +581,7 @@ Development: http://localhost:8000/v1
 ---
 
 ### 5.3 Delete Comment
-**DELETE** `posts/comments/<comment_id>`
+**DELETE** `posts/comments/delete?comment_id=1?post_id=3`
 
 **Headers:** `Authorization: Bearer <token>`
 

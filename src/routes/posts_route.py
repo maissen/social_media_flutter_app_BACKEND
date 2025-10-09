@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.comments_crud import create_comment
-from src.posts_crud import delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
+from src.comments_crud import create_comment, delete_comment_of_post
+from src.posts_crud import decrement_comments_count_of_post, delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
@@ -300,5 +300,41 @@ def create_new_comment(
             success=False,
             data=None,
             message="Failed to create comment",
+            timestamp=datetime.utcnow()
+        )
+    
+
+@router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_200_OK)
+def delete_comment(
+    comment_id: int = Query(..., description="ID of the comment to delete"),
+    post_id: int = Query(..., description="ID of the post the comment belongs to"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Delete a specific comment of a post.
+    Only the comment owner or an admin should be allowed to delete (if implemented).
+    """
+    try:
+        success = delete_comment_of_post(comment_id, post_id)
+
+        if not success:
+            return GenericResponse(
+                success=False,
+                message="Comment not found or could not be deleted",
+                timestamp=datetime.utcnow()
+            )
+
+        decrement_comments_count_of_post(post_id=post_id)
+        return GenericResponse(
+            success=True,
+            message="Comment deleted successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(f"Error deleting comment: {e}")
+        return GenericResponse(
+            success=False,
+            message="An unexpected error occurred while deleting the comment",
             timestamp=datetime.utcnow()
         )
