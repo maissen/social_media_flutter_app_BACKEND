@@ -9,3 +9,5 @@ services:
     environment:
       SECRET_KEY: mysecret
       ALGORITHM: HS256
+      UPLOAD_DIR: "uploads/"
+      UPLOAD_FILES_PREFIX: "url"

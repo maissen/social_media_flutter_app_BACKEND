@@ -195,7 +195,7 @@ def get_comments_for_post(post_id: int) -> List[CommentProfile]:
 # 🔹 Count Utilities
 # ====================================================
 
-def get_posts_count(user_id: int) -> int:
+def get_posts_count() -> int:
     """
     Get total posts count.
     If user_id is provided → count only that user's posts.

@@ -1,3 +1,18 @@
+# Node / environment
 node_modules/
 .env
+
+# Database files
 *.dat
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.svg
+*.webp
+*.tiff
+*.ico
+*.heic
