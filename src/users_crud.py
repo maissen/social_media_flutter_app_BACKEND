@@ -71,3 +71,25 @@ def find_matching_username(username: str) -> List[UserSchema]:
     users = load_users()
     matching_users = [user for user in users if username in user.username.lower()]
     return matching_users
+
+
+def increment_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
+    """Increment the post count of a user by 1."""
+    users = load_users()
+    for user in users:
+        if user.user_id == user_id:
+            user.posts_count += 1
+            save_users(users)
+            return user
+    return None  # User not found
+
+
+def decrement_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
+    """Decrement the post count of a user by 1 (not below 0)."""
+    users = load_users()
+    for user in users:
+        if user.user_id == user_id:
+            user.posts_count = max(0, user.posts_count - 1)
+            save_users(users)
+            return user
+    return None  # User not found

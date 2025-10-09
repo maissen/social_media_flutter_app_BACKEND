@@ -5,6 +5,7 @@ from src.posts_crud import get_a_single_post, get_posts_of_user, insert_new_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import PostSchema
 from src.core.security import get_current_user_from_token
+from src.users_crud import increment_posts_count_of_user, decrement_posts_count_of_user
 
 # Directory where uploaded media will be stored
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/")
@@ -65,6 +66,7 @@ async def create_post(
         )
 
         insert_new_post(new_post)
+        increment_posts_count_of_user(current_user.user_id)
 
         return GenericResponse(
             success=True,
