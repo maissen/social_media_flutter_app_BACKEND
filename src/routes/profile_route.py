@@ -4,6 +4,7 @@ import os
 import shutil
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
+from src.users_crud import update_user_profile_picture
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 
@@ -42,6 +43,8 @@ async def update_profile_picture(
         # update_user_profile_picture(current_user.id, filename)
 
         file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"  # if served by StaticFiles (e.g., app.mount("/static", StaticFiles(...)))
+
+        update_user_profile_picture(file=file_url, user_id=current_user.user_id)
 
         return GenericResponse(
             success=True,
