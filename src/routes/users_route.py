@@ -3,7 +3,7 @@ from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id
-from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserSchema, UserSearchedSchema
+from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
 
@@ -22,8 +22,8 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
                 timestamp=datetime.utcnow()
             )
 
-        # Convert UserSchema to UserSchema
-        user_profile = UserSchema(
+        # Convert UserSchema to UserProfileSchema
+        user_profile = UserProfileSchema(
             user_id=user.user_id,
             email=user.email,
             username=user.username,

@@ -5,7 +5,7 @@ from src.schemas.generic_response import GenericResponse
 from src.core.security import get_password_hash, verify_password, create_access_token
 from src.services.auth_service import logout_user
 from src.users_db import insert_user, get_user_by_email, get_new_user_id
-from src.schemas.users import UserSchema
+from src.schemas.users import UserSchema, UserProfileSchema
 
 router = APIRouter(prefix="", tags=["Authentication"])
 
@@ -28,9 +28,13 @@ def register_user(payload: RegisterUserRequest):
             email=payload.email,
             username=payload.username,
             password=get_password_hash(payload.password),
-            profile_picture="",
+            created_at=datetime.utcnow(),
             bio="",
-            created_at=datetime.utcnow()
+            profile_picture="",
+            followers_count=0,
+            following_count=0,
+            posts_count=0,
+            is_following=False
         )
 
         # add user to db
@@ -54,10 +58,10 @@ def register_user(payload: RegisterUserRequest):
 def login(payload: LoginRequest):
     try:
         user = get_user_by_email(payload.email)
-        if not user or not hasattr(user, "password"):
+        if not user:
             return GenericResponse(
                 success=False,
-                message="Failed, please submit a valid data",
+                message="User with that email does not exist",
                 timestamp=datetime.utcnow()
             )
 
