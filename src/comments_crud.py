@@ -134,3 +134,18 @@ def get_likes_count_of_comment(comment_id: int) -> int:
     """
     likes = load_likes()
     return sum(1 for c_id, _ in likes if c_id == comment_id)
+
+
+def is_comment_liked_by_me(comment_id: int, user_id: int) -> bool:
+    """
+    Check if the given user has liked a specific comment.
+
+    Args:
+        comment_id (int): The ID of the comment.
+        user_id (int): The ID of the user.
+
+    Returns:
+        bool: True if the user has liked the comment, False otherwise.
+    """
+    likes = load_likes()
+    return (comment_id, user_id) in likes
