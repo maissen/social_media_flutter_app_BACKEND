@@ -6,6 +6,10 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/social_platform_db
+      SECRET_KEY: mysecret
+      ALGORITHM: HS256
     depends_on:
       db:
         condition: service_healthy
