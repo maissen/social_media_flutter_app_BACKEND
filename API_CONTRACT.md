@@ -408,7 +408,7 @@ Development: http://localhost:8000/v1
       "created_at": "2025-10-06T10:30:00Z",
       "likes_nbr": 42,
       "comments_nbr": 15,
-      "is_liked": false,
+      "is_liked_by_me": false,
     }
   ],
   "message": "Post retrieved successfully",

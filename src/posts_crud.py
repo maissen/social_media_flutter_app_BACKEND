@@ -45,10 +45,16 @@ def get_a_single_post(post_id: int) -> Optional[PostSchema]:
     return next((p for p in posts if p.post_id == post_id), None)
 
 
-def get_posts_of_user(user_id: int) -> List[PostSchema]:
-    """Retrieve all posts belonging to a given user."""
+def get_posts_of_user(current_user_id: int, target_user_id: int) -> List[PostSchema]:
+    """Retrieve all posts belonging to a given user, marking which are liked by the current user."""
     posts = load_pickle(POSTS_DB)
-    return [p for p in posts if p.user_id == user_id]
+    user_posts = [p for p in posts if p.user_id == target_user_id]
+
+    for post in user_posts:
+        post.is_liked_by_me = is_post_liked_by_me(current_user_id, post.post_id)
+
+    return user_posts
+
 
 
 def delete_a_post(post_id: int) -> bool:

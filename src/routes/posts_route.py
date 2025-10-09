@@ -11,7 +11,7 @@ UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Prefix for filenames
-UPLOAD_FILES_PREFIX = os.getenv("UPLOAD_FILES_PREFIX", "")
+UPLOAD_FILES_PREFIX = os.getenv("UPLOAD_FILES_PREFIX")
 
 router = APIRouter(prefix="", tags=["Posts"])
 
@@ -60,7 +60,8 @@ async def create_post(
             media_url=media_url,
             created_at=datetime.utcnow(),
             likes_nbr=0,
-            comments_nbr=0
+            comments_nbr=0,
+            is_liked_by_me=False
         )
 
         insert_new_post(new_post)
@@ -83,48 +84,14 @@ async def create_post(
 
 
 
-@router.get("/{post_id}", response_model=GenericResponse)
-def get_post(post_id: int, current_user=Depends(get_current_user_from_token)):
-    """
-    Retrieve a single post by its ID.
-    Requires a valid JWT token.
-    """
-    try:
-        post = get_a_single_post(post_id)
-        if not post:
-            return GenericResponse(
-                success=False,
-                data=None,
-                message="Post not found",
-                timestamp=datetime.utcnow()
-            )
-
-        return GenericResponse(
-            success=True,
-            data=post,
-            message="Post retrieved successfully",
-            timestamp=datetime.utcnow()
-        )
-
-    except Exception as e:
-        print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to retrieve post",
-            timestamp=datetime.utcnow()
-        )
-    
-
-
-@router.get("/user/{user_id}", response_model=GenericResponse)
+@router.get("/{user_id}", response_model=GenericResponse)
 def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_token)):
     """
     Retrieve all posts for a specific user.
     Requires a valid JWT token.
     """
     try:
-        posts = get_posts_of_user(user_id)
+        posts = get_posts_of_user(current_user_id=current_user.user_id, target_user_id=user_id)
         return GenericResponse(
             success=True,
             data=posts,
