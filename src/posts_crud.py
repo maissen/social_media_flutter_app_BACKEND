@@ -5,8 +5,9 @@ from src.schemas.posts import PostSchema, CommentProfile
 from src.users_crud import get_user_by_id
 
 POSTS_DB = "posts_database.dat"
-LIKES_DB = "likes_database.dat"         # (user_id, post_id)
-COMMENTS_DB = "comments_database.dat"   # List[CommentProfile]
+LIKES_DB = "likes_database.dat"
+COMMENTS_DB = "comments_database.dat" 
+FOLLOWERS_DB = "followers_database.dat"
 
 
 # ====================================================
@@ -262,3 +263,51 @@ def decrement_comments_count_of_post(post_id: int) -> bool:
             save_pickle(POSTS_DB, posts)
             return True
     return False
+
+
+
+
+
+def load_posts() -> list[PostSchema]:
+    """Load all posts from the posts file."""
+    try:
+        with open(POSTS_DB, "rb") as f:
+            return pickle.load(f)
+    except (FileNotFoundError, EOFError):
+        return []
+
+
+def load_follows() -> list[dict]:
+    """Load all follow relationships from the follows file."""
+    try:
+        with open(FOLLOWERS_DB, "rb") as f:
+            return pickle.load(f)
+    except (FileNotFoundError, EOFError):
+        return []
+
+
+def load_feed_of_user(user_id: int) -> list[PostSchema]:
+    posts = load_posts()
+    follows = load_follows()
+
+    # handle both tuple- and dict-based data for safety
+    following_ids = []
+    for f in follows:
+        if isinstance(f, dict):
+            if f["follower_id"] == user_id:
+                following_ids.append(f["following_id"])
+        elif isinstance(f, (tuple, list)) and len(f) >= 2:
+            follower_id, following_id = f[0], f[1]
+            if follower_id == user_id:
+                following_ids.append(following_id)
+
+    # Include current user's own posts
+    user_and_following_ids = [user_id] + following_ids
+
+    # Filter posts
+    user_feed_posts = [post for post in posts if post.user_id in user_and_following_ids]
+
+    # Sort by creation date (newest first)
+    user_feed_posts.sort(key=lambda p: p.created_at, reverse=True)
+
+    return user_feed_posts
