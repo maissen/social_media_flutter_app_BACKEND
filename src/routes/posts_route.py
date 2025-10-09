@@ -391,7 +391,7 @@ def toggle_like_comment(
             success=True,
             data={
                 "comment_id": comment_id,
-                "is_liked_by_me": not already_liked,
+                "is_liked_by_me": is_comment_liked_by_me(comment_id=comment_id, user_id=current_user.user_id),
                 "likes_count": likes_count
             },
             message=f"Comment {action} successfully",

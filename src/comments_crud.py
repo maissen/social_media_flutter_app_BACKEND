@@ -88,6 +88,7 @@ def like_comment_of_post(comment_id: int, user_id: int) -> bool:
         return False
 
     comment.likes_nbr += 1
+    comment.is_liked_by_me = True
     likes.append((comment_id, user_id))
 
     save_comments(comments)
@@ -109,6 +110,7 @@ def dislike_comment_of_post(comment_id: int, user_id: int) -> bool:
 
     if comment.likes_nbr > 0:
         comment.likes_nbr -= 1
+        comment.is_liked_by_me = False
     likes.remove((comment_id, user_id))
 
     save_comments(comments)

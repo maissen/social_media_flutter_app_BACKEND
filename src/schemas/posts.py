@@ -11,6 +11,7 @@ class CommentProfile(BaseModel):
     comment_payload: str
     created_at: datetime
     likes_nbr: int = 0
+    is_liked_by_me: bool = False
 
     class Config:
         orm_mode = True
