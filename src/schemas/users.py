@@ -14,3 +14,11 @@ class UserSchema(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UpdateBioRequest(BaseModel):
+    new_bio: str
+
+
+class UpdateProfilePictureRequest(BaseModel):
+    profile_picture: str
