@@ -1,10 +1,11 @@
+from typing import List
 from fastapi import APIRouter, Depends, Query
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
-from src.followers_db import check_following_status, follow, unfollow
+from src.followers_db import check_following_status, follow, get_followers_of_user, load_followers, unfollow
 
 
 router = APIRouter(prefix="", tags=["User Management"])
@@ -244,37 +245,10 @@ def get_followers(
 ):
     """
     Get all users who are following the given user.
+    Requires a valid JWT token.
     """
     try:
-        # Check if target user exists
-        target_user = get_user_by_id(user_id)
-        if not target_user:
-            return GenericResponse(
-                success=False,
-                message="User not found",
-                timestamp=datetime.utcnow()
-            )
-
-        # Load followers database
-        followers_list = load_followers()
-
-        # Find all follower IDs for this user
-        follower_ids = [follower_id for (follower_id, following_id) in followers_list if following_id == user_id]
-
-        # Load all users
-        users = load_users()
-
-        # Build response with minimal info (UserSearchedSchema)
-        followers_data: List[UserSearchedSchema] = []
-        for uid in follower_ids:
-            user = next((u for u in users if u.user_id == uid), None)
-            if user:
-                followers_data.append(UserSearchedSchema(
-                    user_id=user.user_id,
-                    username=user.username,
-                    profile_picture=user.profile_picture,
-                    email=user.email
-                ))
+        followers_data: List = get_followers_of_user(user_id)
 
         return GenericResponse(
             success=True,
@@ -283,8 +257,6 @@ def get_followers(
             timestamp=datetime.utcnow()
         )
 
-    except HTTPException as e:
-        raise e
     except Exception as e:
         print(e)
         return GenericResponse(
