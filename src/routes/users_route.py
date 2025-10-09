@@ -235,3 +235,61 @@ def follow_unfollow(
             message="An unexpected error occurred",
             timestamp=datetime.utcnow()
         )
+    
+
+@router.get("/followers", response_model=GenericResponse)
+def get_followers(
+    user_id: int = Query(..., description="ID of the user to get followers for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Get all users who are following the given user.
+    """
+    try:
+        # Check if target user exists
+        target_user = get_user_by_id(user_id)
+        if not target_user:
+            return GenericResponse(
+                success=False,
+                message="User not found",
+                timestamp=datetime.utcnow()
+            )
+
+        # Load followers database
+        followers_list = load_followers()
+
+        # Find all follower IDs for this user
+        follower_ids = [follower_id for (follower_id, following_id) in followers_list if following_id == user_id]
+
+        # Load all users
+        users = load_users()
+
+        # Build response with minimal info (UserSearchedSchema)
+        followers_data: List[UserSearchedSchema] = []
+        for uid in follower_ids:
+            user = next((u for u in users if u.user_id == uid), None)
+            if user:
+                followers_data.append(UserSearchedSchema(
+                    user_id=user.user_id,
+                    username=user.username,
+                    profile_picture=user.profile_picture,
+                    email=user.email
+                ))
+
+        return GenericResponse(
+            success=True,
+            data=followers_data,
+            message="Followers retrieved successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="An unexpected error occurred",
+            timestamp=datetime.utcnow()
+        )
