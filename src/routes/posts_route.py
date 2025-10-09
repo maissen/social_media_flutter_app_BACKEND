@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.comments_crud import create_comment, delete_comment_of_post
+from src.comments_crud import create_comment, decrement_likes_count_of_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_likes_of_comment, increment_likes_count_of_comment, is_comment_liked_by_me, like_comment_of_post
 from src.posts_crud import decrement_comments_count_of_post, delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
@@ -340,3 +340,70 @@ def delete_comment(
         )
     
 
+@router.post("/comments/like-dislike", response_model=GenericResponse)
+def toggle_like_comment(
+    comment_id: int = Query(..., description="ID of the comment to like/unlike"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Like a comment if not liked; otherwise, remove like (dislike).
+    """
+
+    try:
+        comment = get_comment_by_id(comment_id=comment_id)
+
+        if not comment:
+            return GenericResponse(
+                success=False,
+                message="Comment is not found",
+                timestamp=datetime.utcnow()
+            )
+    except:
+        return GenericResponse(
+            success=False,
+            message="An error occured while looking for the comment",
+            timestamp=datetime.utcnow()
+        )
+
+    try:
+        user_id = current_user.user_id
+        already_liked = is_comment_liked_by_me(comment_id, user_id)
+
+        if already_liked:
+            # User already liked → remove like
+            success = dislike_comment_of_post(comment_id, user_id)
+            action = "disliked"
+            decrement_likes_count_of_comment(comment_id=comment_id)
+        else:
+            # User has not liked → add like
+            success = like_comment_of_post(comment_id, user_id)
+            action = "liked"
+            increment_likes_count_of_comment(comment_id=comment_id)
+
+        if not success:
+            return GenericResponse(
+                success=False,
+                message="Failed to like/dislike comment",
+                timestamp=datetime.utcnow()
+            )
+
+        likes_count = get_likes_of_comment(comment_id)
+        return GenericResponse(
+            success=True,
+            data={
+                "comment_id": comment_id,
+                "is_liked_by_me": not already_liked,
+                "likes_count": likes_count
+            },
+            message=f"Comment {action} successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="An unexpected error occurred",
+            timestamp=datetime.utcnow()
+        )

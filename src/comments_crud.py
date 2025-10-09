@@ -149,3 +149,59 @@ def is_comment_liked_by_me(comment_id: int, user_id: int) -> bool:
     """
     likes = load_likes()
     return (comment_id, user_id) in likes
+
+
+def increment_likes_count_of_comment(comment_id: int) -> bool:
+    """
+    Increment the likes_nbr of a comment by 1.
+
+    Args:
+        comment_id (int): ID of the comment.
+
+    Returns:
+        bool: True if successful, False if comment not found.
+    """
+    comments = load_comments()
+    comment = next((c for c in comments if c.comment_id == comment_id), None)
+    if not comment:
+        return False
+
+    comment.likes_nbr += 1
+    save_comments(comments)
+    return True
+
+
+def decrement_likes_count_of_comment(comment_id: int) -> bool:
+    """
+    Decrement the likes_nbr of a comment by 1 (minimum 0).
+
+    Args:
+        comment_id (int): ID of the comment.
+
+    Returns:
+        bool: True if successful, False if comment not found.
+    """
+    comments = load_comments()
+    comment = next((c for c in comments if c.comment_id == comment_id), None)
+    if not comment:
+        return False
+
+    if comment.likes_nbr > 0:
+        comment.likes_nbr -= 1
+
+    save_comments(comments)
+    return True
+
+
+def get_comment_by_id(comment_id: int) -> CommentProfile | None:
+    """
+    Retrieve a single comment by its ID.
+
+    Args:
+        comment_id (int): The ID of the comment.
+
+    Returns:
+        CommentProfile | None: The comment if found, otherwise None.
+    """
+    comments = load_comments()
+    return next((c for c in comments if c.comment_id == comment_id), None)
