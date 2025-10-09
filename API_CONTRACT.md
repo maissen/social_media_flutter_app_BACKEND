@@ -541,28 +541,26 @@ Development: http://localhost:8000/v1
   "success": true,
   "data": [
     {
-      "comment_id": "v4",
-      "author": {
-        "user_id": "v4",
-        "username": "johndoe",
-        "profile_picture": "https://storage.com/profile.jpg"
-      },
-      "content": "Great post!",
-      "likes_count": 5,
-      "is_liked": false,
-      "created_at": "2025-10-06T10:30:00Z"
+      "comment_id": 1,
+      "post_id": 1,
+      "user_id": 4,
+      "username": "johndoe",
+      "profile_picture": "https://storage.com/profile.jpg",
+      "comment_payload": "Great post!",
+      "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 5,
+      "is_liked_by_me": false
     },
     {
-      "comment_id": "v4",
-      "author": {
-        "user_id": "v4",
-        "username": "johndoe",
-        "profile_picture": "https://storage.com/profile.jpg"
-      },
-      "content": "Great post!",
-      "likes_count": 5,
-      "is_liked": false,
-      "created_at": "2025-10-06T10:30:00Z"
+      "comment_id": 2,
+      "post_id": 1,
+      "user_id": 5,
+      "username": "janedoe",
+      "profile_picture": "https://storage.com/profile2.jpg",
+      "comment_payload": "Nice post!",
+      "created_at": "2025-10-06T10:32:00Z",
+      "likes_nbr": 2,
+      "is_liked_by_me": true
     }
   ],
   "message": "Comments retrieved successfully",
@@ -600,6 +598,7 @@ Development: http://localhost:8000/v1
   "success": true,
   "data": {
     "is_liked": true,
+    "likes_nbr": 15
   },
   "message": "Comment liked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
