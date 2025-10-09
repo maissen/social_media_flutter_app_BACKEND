@@ -30,11 +30,11 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
             username=user.username,
             bio=user.bio,
             profile_picture=user.profile_picture,
-            followers_count=0,
-            following_count=0,
-            posts_count=0,
+            followers_count=user.followers_count,
+            following_count=user.following_count,
+            posts_count=user.posts_count,
             created_at=user.created_at,
-            is_following=False
+            is_following=user.is_following
         )
 
         return GenericResponse(
