@@ -195,18 +195,16 @@ def get_comments_for_post(post_id: int) -> List[CommentProfile]:
 # 🔹 Count Utilities
 # ====================================================
 
-def get_posts_count(user_id: Optional[int] = None) -> int:
+def get_posts_count(user_id: int) -> int:
     """
     Get total posts count.
     If user_id is provided → count only that user's posts.
     """
     posts = load_pickle(POSTS_DB)
-    if user_id:
-        return sum(1 for p in posts if p.user_id == user_id)
     return len(posts)
 
 
-def get_likes_count(post_id: Optional[int] = None, user_id: Optional[int] = None) -> int:
+def get_likes_count(post_id: int) -> int:
     """
     Get total likes count.
     - If post_id provided → likes on that post.
@@ -215,12 +213,10 @@ def get_likes_count(post_id: Optional[int] = None, user_id: Optional[int] = None
     likes = load_pickle(LIKES_DB)
     if post_id:
         return sum(1 for (_, pid) in likes if pid == post_id)
-    if user_id:
-        return sum(1 for (uid, _) in likes if uid == user_id)
     return len(likes)
 
 
-def get_comments_count(post_id: Optional[int] = None, user_id: Optional[int] = None) -> int:
+def get_comments_count(post_id: int) -> int:
     """
     Get total comments count.
     - If post_id provided → comments on that post.
@@ -229,6 +225,4 @@ def get_comments_count(post_id: Optional[int] = None, user_id: Optional[int] = N
     comments = load_pickle(COMMENTS_DB)
     if post_id:
         return sum(1 for c in comments if getattr(c, "post_id", None) == post_id)
-    if user_id:
-        return sum(1 for c in comments if c.user_id == user_id)
     return len(comments)
