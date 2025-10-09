@@ -1,27 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from datetime import datetime
-from typing import List, Optional
 from src.schemas.auth import RegisterUserRequest, LoginRequest
 from src.schemas.generic_response import GenericResponse
-from src.models.user import User
 from src.core.security import get_password_hash, verify_password, create_access_token
 from src.services.auth_service import logout_user
 import uuid
+from src.users_db import users_db, get_user_by_email
+from src.schemas.users import UserSchema
 
 router = APIRouter(prefix="", tags=["Authentication"])
 
-# In-memory user storage
-users_db: List[dict] = []
-
-
-def get_user_by_email(email: str) -> Optional[dict]:
-    """Find user by email in the in-memory list."""
-    return next((user for user in users_db if user["email"] == email), None)
-
-
-def get_user_by_id(user_id: str) -> Optional[dict]:
-    """Find user by ID in the in-memory list."""
-    return next((user for user in users_db if user["id"] == user_id), None)
 
 
 @router.post("/register", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
@@ -36,16 +24,19 @@ def register_user(payload: RegisterUserRequest):
                 timestamp=datetime.utcnow()
             )
 
-        # Create new user dictionary
-        user = {
-            "id": str(uuid.uuid4()),
-            "email": payload.email,
-            "username": payload.username,
-            "hashed_password": get_password_hash(payload.password),
-            "date_of_birth": payload.date_of_birth,
-            "profile_picture": None,
-            "created_at": datetime.utcnow()
-        }
+        # Create new user object
+        user = UserSchema(
+            user_id=len(users_db) + 1,
+            email=payload.email,
+            username=payload.username,
+            profile_picture=None,
+            bio=None,
+            date_of_birth=payload.date_of_birth,
+            created_at=datetime.utcnow()
+        )
+
+        # Store hashed password separately (you could also include it in the object)
+        user.password = get_password_hash(payload.password)
 
         users_db.append(user)
 
@@ -56,34 +47,33 @@ def register_user(payload: RegisterUserRequest):
             timestamp=datetime.utcnow()
         )
     except Exception as e:
-        print(f"{e}")
+        print(e)
         return GenericResponse(
             success=False,
-            message=f"Oops, failed to register user",
+            message="Oops, failed to register user",
             timestamp=datetime.utcnow()
         )
-
 
 @router.post("/login", response_model=GenericResponse)
 def login(payload: LoginRequest):
     try:
         user = get_user_by_email(payload.email)
-        if not user:
+        if not user or not hasattr(user, "password"):
             return GenericResponse(
                 success=False,
-                message=f"Failed, please submit a valid data",
-                timestamp=datetime.utcnow()
-            )
-        
-        if not verify_password(payload.password, user["hashed_password"]):
-            return GenericResponse(
-                success=False,
-                message=f"Your password is wrong",
+                message="Failed, please submit a valid data",
                 timestamp=datetime.utcnow()
             )
 
-        token = create_access_token(data={"sub": user["id"]})
-        expires_in = 36000  # 10 hour
+        if not verify_password(payload.password, user.password):
+            return GenericResponse(
+                success=False,
+                message="Your password is wrong",
+                timestamp=datetime.utcnow()
+            )
+
+        token = create_access_token(data={"sub": str(user.user_id)})
+        expires_in = 36000  # 10 hours
 
         return GenericResponse(
             success=True,
@@ -91,10 +81,10 @@ def login(payload: LoginRequest):
                 "access_token": token,
                 "expires_in": expires_in,
                 "user": {
-                    "user_id": user["id"],
-                    "email": user["email"],
-                    "username": user["username"],
-                    "profile_picture": user.get("profile_picture")
+                    "user_id": user.user_id,
+                    "email": user.email,
+                    "username": user.username,
+                    "profile_picture": user.profile_picture
                 }
             },
             message="Login successful",
@@ -104,7 +94,7 @@ def login(payload: LoginRequest):
         print(e)
         return GenericResponse(
             success=False,
-            message=f"An error occured",
+            message="An error occured",
             timestamp=datetime.utcnow()
         )
 
