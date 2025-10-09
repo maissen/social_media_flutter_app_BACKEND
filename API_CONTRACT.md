@@ -249,10 +249,12 @@ Development: http://localhost:8000/v1
 ## 3. Social Features
 
 ### 3.1 Follow User
-**POST** `/users/follow-unfollow/<target_user_id>`
+**POST** `/users/follow-unfollow/?target_user_id=3`
 
 **Headers:** `Authorization: Bearer <token>`
 
+**Query Parameters:**
+- `target_user_id` (required): the target_user_id to follow/unfollow
 
 **Response:** `200 OK`
 ```json

@@ -187,7 +187,7 @@ def search_users(
 
 @router.post("/follow-unfollow", response_model=GenericResponse)
 def follow_unfollow(
-    target_user_id: int,
+    target_user_id: int,  # Query parameter
     current_user=Depends(get_current_user_from_token)
 ):
     """
