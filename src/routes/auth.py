@@ -42,7 +42,7 @@ def register_user(payload: RegisterUserRequest, db: Session = Depends(get_db)):
         )
     except Exception as e:
         db.rollback()
-        print(f"e")
+        print(f"{e}")
         return GenericResponse(
             success=False,
             message=f"Oops, failed to register user",
