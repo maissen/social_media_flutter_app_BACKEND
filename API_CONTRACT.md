@@ -279,7 +279,10 @@ Development: http://localhost:8000/v1
 ---
 
 ### 3.3 Get Followers
-**GET** `/users/followers/<user-id>`
+**GET** `/users/followers?user_id=3`
+
+**Query Parameters:**
+- `user_id` (required): the user_id to follow/unfollow
 
 **Response:** `200 OK`
 ```json
@@ -313,7 +316,10 @@ Development: http://localhost:8000/v1
 ---
 
 ### 3.4 Get Following
-**GET** `/users/followings/<user-id>`
+**GET** `/users/followings?user_id=3`
+
+**Query Parameters:**
+- `user_id` (required): the user_id to follow/unfollow
 
 **Response:** `200 OK`
 ```json

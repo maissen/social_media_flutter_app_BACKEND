@@ -5,7 +5,7 @@ from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
-from src.followers_db import check_following_status, follow, get_followers_of_user, load_followers, unfollow
+from src.followers_db import check_following_status, follow, get_followers_of_user, get_followings_of_user, load_followers, unfollow
 
 
 router = APIRouter(prefix="", tags=["User Management"])
@@ -254,6 +254,35 @@ def get_followers(
             success=True,
             data=followers_data,
             message="Followers retrieved successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="An unexpected error occurred",
+            timestamp=datetime.utcnow()
+        )
+    
+
+@router.get("/followings", response_model=GenericResponse)
+def get_followings(
+    user_id: int = Query(..., description="ID of the user to get followings for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Get all users that the given user is following.
+    Requires a valid JWT token.
+    """
+    try:
+        followings: List = get_followings_of_user(user_id)
+
+        return GenericResponse(
+            success=True,
+            data=followings,
+            message="Followings retrieved successfully",
             timestamp=datetime.utcnow()
         )
 
