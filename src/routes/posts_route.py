@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-from fastapi import APIRouter, Depends, Form, File, UploadFile, status
-from src.posts_crud import get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, update_a_post
+from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
+from src.posts_crud import delete_a_post, get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
@@ -158,3 +158,52 @@ def update_post(
         message="Post updated successfully",
         timestamp=datetime.utcnow()
     )
+
+
+
+@router.delete("/delete", response_model=GenericResponse)
+def delete_post(
+    post_id: int = Query(..., description="ID of the post to delete"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Delete a post by its ID.
+    Only the post owner can delete their post.
+    """
+    try:
+        post = get_a_single_post(post_id)
+        if not post:
+            return GenericResponse(
+                success=False,
+                message="Post not found",
+                timestamp=datetime.utcnow()
+            )
+
+        if post.user_id != current_user.user_id:
+            return GenericResponse(
+                success=False,
+                message="You are not allowed to delete this post",
+                timestamp=datetime.utcnow()
+            )
+
+        success = delete_a_post(post_id)
+        if success:
+            return GenericResponse(
+                success=True,
+                message="Post deleted successfully",
+                timestamp=datetime.utcnow()
+            )
+        else:
+            return GenericResponse(
+                success=False,
+                message="Failed to delete post",
+                timestamp=datetime.utcnow()
+            )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            message="An unexpected error occurred",
+            timestamp=datetime.utcnow()
+        )
