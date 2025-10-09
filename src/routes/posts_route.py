@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
 from src.comments_crud import create_comment
-from src.posts_crud import delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
+from src.posts_crud import delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
@@ -285,6 +285,7 @@ def create_new_comment(
     """
     try:
         comment = create_comment(current_user, post_id, content.content)
+        increment_comments_count_of_post(post_id=post_id)
 
         return GenericResponse(
             success=True,

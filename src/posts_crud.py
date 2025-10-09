@@ -232,3 +232,33 @@ def get_comments_count(post_id: int) -> int:
     if post_id:
         return sum(1 for c in comments if getattr(c, "post_id", None) == post_id)
     return len(comments)
+
+
+def increment_comments_count_of_post(post_id: int) -> bool:
+    """
+    Increment the comments count for a specific post.
+    Returns True if successful, False if post not found.
+    """
+    posts = load_pickle(POSTS_DB)
+    for p in posts:
+        if p.post_id == post_id:
+            p.comments_nbr += 1
+            save_pickle(POSTS_DB, posts)
+            return True
+    return False
+
+
+def decrement_comments_count_of_post(post_id: int) -> bool:
+    """
+    Decrement the comments count for a specific post.
+    Ensures the count doesn't go below zero.
+    Returns True if successful, False if post not found.
+    """
+    posts = load_pickle(POSTS_DB)
+    for p in posts:
+        if p.post_id == post_id:
+            if p.comments_nbr > 0:
+                p.comments_nbr -= 1
+            save_pickle(POSTS_DB, posts)
+            return True
+    return False
