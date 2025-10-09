@@ -499,7 +499,7 @@ Development: http://localhost:8000/v1
 ## 5. Comments
 
 ### 5.1 Create Comment
-**POST** `/posts/comments/<post-id>`
+**POST** `/posts/comments/create/<post-id>`
 
 **Headers:** `Authorization: Bearer <token>`
 

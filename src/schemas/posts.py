@@ -32,3 +32,7 @@ class PostSchema(BaseModel):
 
 class UpdatePostSchema(BaseModel):
     new_content: str
+
+
+class CreateOrUpdateCommentSchema(BaseModel):
+    content: str

@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
+from src.comments_crud import create_comment
 from src.posts_crud import delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
-from src.schemas.posts import PostSchema, UpdatePostSchema
+from src.schemas.posts import CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
 from src.users_crud import increment_posts_count_of_user, decrement_posts_count_of_user
 
@@ -272,3 +273,30 @@ def like_or_dislike_post(
     
 
 
+@router.post("/comments/create/{post_id}", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
+def create_new_comment(
+    comment: CreateOrUpdateCommentSchema,
+    post_id: int,
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Create a new comment on a post.
+    """
+    try:
+        comment = create_comment(current_user, post_id, comment.content)
+
+        return GenericResponse(
+            success=True,
+            data=comment,
+            message="Comment created successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(f"Error creating comment: {e}")
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed to create comment",
+            timestamp=datetime.utcnow()
+        )
