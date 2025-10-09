@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from datetime import datetime, date
-from typing import Optional, Any, Dict
+from datetime import date
 
 
 class RegisterUserRequest(BaseModel):
@@ -13,11 +12,3 @@ class RegisterUserRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-
-class GenericResponse(BaseModel):
-    success: bool
-    data: Optional[Any] = None
-    message: str
-    timestamp: datetime
-
