@@ -68,7 +68,7 @@ async def create_post(
 
         return GenericResponse(
             success=True,
-            data={"post_id": new_post.post_id, "media_url": media_url},
+            data=new_post,
             message="Post created successfully",
             timestamp=datetime.utcnow()
         )
@@ -95,7 +95,7 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
         return GenericResponse(
             success=True,
             data=posts,
-            message=f"Retrieved {len(posts)} post(s) for user {user_id}",
+            message=f"posts received successfully",
             timestamp=datetime.utcnow()
         )
 
