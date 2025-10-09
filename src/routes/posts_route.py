@@ -44,14 +44,14 @@ async def create_post(
         media_url = ""
         if media_file:
             file_ext = os.path.splitext(media_file.filename)[1]
-            file_name = f"{UPLOAD_FILES_PREFIX}{post_id}{file_ext}"
+            file_name = f"post_{post_id}{file_ext}"
             file_path = os.path.join(UPLOAD_DIR, file_name)
 
             with open(file_path, "wb") as buffer:
                 buffer.write(await media_file.read())
 
             # URL or relative path for access
-            media_url = f"/{UPLOAD_DIR}{file_name}"
+            media_url = f"{UPLOAD_FILES_PREFIX}/{UPLOAD_DIR}{file_name}"
 
         new_post = PostSchema(
             post_id=post_id,
