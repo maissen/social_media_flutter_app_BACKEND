@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.posts_crud import delete_a_post, get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, update_a_post
+from src.posts_crud import delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
@@ -207,3 +207,68 @@ def delete_post(
             message="An unexpected error occurred",
             timestamp=datetime.utcnow()
         )
+    
+
+
+@router.post("/like-deslike/{post_id}", response_model=GenericResponse)
+def like_or_dislike_post(
+    post_id: int,
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Like or dislike a post.
+    - If already liked → dislike.
+    - If not liked → like.
+    """
+    try:
+        post = get_a_single_post(post_id)
+        if not post:
+            return GenericResponse(
+                success=False,
+                message="Post not found",
+                timestamp=datetime.utcnow()
+            )
+
+        user_id = current_user.user_id
+
+        if is_post_liked_by_me(user_id, post_id):
+            # Already liked → remove like
+            success = dislike_post(user_id, post_id)
+            is_liked = False
+        else:
+            # Not liked → add like
+            success = like_post(user_id, post_id)
+            is_liked = True
+
+        if not success:
+            return GenericResponse(
+                success=False,
+                message="Failed to like/dislike post",
+                timestamp=datetime.utcnow()
+            )
+    
+        if is_liked:
+            return GenericResponse(
+                success=True,
+                data={"is_liked": is_liked},
+                message="Post is liked successfully",
+                timestamp=datetime.utcnow()
+            )
+        else:
+            return GenericResponse(
+                success=True,
+                data={"is_liked": is_liked},
+                message="Post is desliked successfully",
+                timestamp=datetime.utcnow()
+            )
+
+    except Exception as e:
+        print(e)
+        return GenericResponse(
+            success=False,
+            message="Failed",
+            timestamp=datetime.utcnow()
+        )
+    
+
+
