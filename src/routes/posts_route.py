@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from src.schemas.posts import CreatePostSchema
+from src.schemas.posts import PostSchema
 from src.core.security import get_current_user_from_token
 
 router = APIRouter(prefix="", tags=["Authentication"])

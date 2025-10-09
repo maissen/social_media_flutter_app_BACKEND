@@ -5,7 +5,7 @@ from src.core.config import settings
 from fastapi import Depends, HTTPException, status
 from datetime import datetime
 from jose import jwt, JWTError
-from src.users_db import get_user_by_id
+from src.users_crud import get_user_by_id
 from src.schemas.users import UserSchema
 
 

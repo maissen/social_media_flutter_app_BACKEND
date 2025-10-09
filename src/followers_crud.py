@@ -2,7 +2,7 @@ import pickle
 from typing import List, Tuple
 
 from src.schemas.users import UserSearchedSchema
-from src.users_db import get_user_by_id, load_users
+from src.users_crud import get_user_by_id, load_users
 
 DB_FILE = "followers_database.dat"
 

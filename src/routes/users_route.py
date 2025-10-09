@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, Query
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
-from src.users_db import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
+from src.users_crud import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username
 from src.schemas.users import UpdateProfilePictureRequest, UpdateBioRequest, UserProfileSchema, UserSearchedSchema
-from src.followers_db import check_following_status, follow, get_followers_of_user, get_followings_of_user, load_followers, unfollow
+from src.followers_crud import check_following_status, follow, get_followers_of_user, get_followings_of_user, load_followers, unfollow
 
 
 router = APIRouter(prefix="", tags=["User Management"])
