@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import List, Tuple
 from src.schemas.posts import CommentProfile
 
-COMMENTS_DB_FILE = "comments_database.dat"
-LIKES_DB_FILE = "comments_likes_database.dat"
+COMMENTS_DB_FILE = "database/comments_database.dat"
+LIKES_DB_FILE = "database/comments_likes_database.dat"
 
 
 # ---------- Comments DB ----------

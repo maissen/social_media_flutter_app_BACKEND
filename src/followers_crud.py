@@ -4,7 +4,7 @@ from typing import List, Tuple
 from src.schemas.users import UserSearchedSchema
 from src.users_crud import get_user_by_id, load_users
 
-DB_FILE = "followers_database.dat"
+DB_FILE = "database/followers_database.dat"
 
 # Each entry is a tuple: (follower_id, following_id)
 # Example: (1, 2) means user 1 follows user 2

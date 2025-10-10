@@ -4,10 +4,10 @@ from typing import List, Optional
 from src.schemas.posts import PostSchema, CommentProfile
 from src.users_crud import get_user_by_id
 
-POSTS_DB = "posts_database.dat"
-LIKES_DB = "likes_database.dat"
-COMMENTS_DB = "comments_database.dat" 
-FOLLOWERS_DB = "followers_database.dat"
+POSTS_DB = "database/posts_database.dat"
+LIKES_DB = "database/likes_database.dat"
+COMMENTS_DB = "database/comments_database.dat" 
+FOLLOWERS_DB = "database/followers_database.dat"
 
 
 # ====================================================

@@ -2,7 +2,7 @@ import pickle
 from typing import List, Optional
 from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
 
-DB_FILE = "users_database.dat"
+DB_FILE = "database/users_database.dat"
 
 def load_users() -> list[UserSchema]:
     """Load users from the file."""
