@@ -311,3 +311,23 @@ def load_feed_of_user(user_id: int) -> list[PostSchema]:
     user_feed_posts.sort(key=lambda p: p.created_at, reverse=True)
 
     return user_feed_posts
+
+
+
+def load_recent_posts(limit: int = 20) -> list[PostSchema]:
+    """
+    Load the most recent posts from all users (for the Explore feed).
+
+    Args:
+        limit (int): Number of posts to return. Defaults to 20.
+
+    Returns:
+        list[PostSchema]: Most recent posts sorted by creation time (newest first).
+    """
+    posts = load_posts()
+
+    # Sort by creation time descending
+    posts.sort(key=lambda p: p.created_at, reverse=True)
+
+    # Apply limit
+    return posts[:limit]
