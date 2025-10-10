@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media API Test Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .auth-status {
+            background: #f7fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .auth-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .auth-info span {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .token-display {
+            font-family: monospace;
+            font-size: 12px;
+            color: #718096;
+            max-width: 500px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            gap: 5px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f7fafc;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .section-header h3 {
+            font-size: 16px;
+            color: #2d3748;
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-box pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #2d3748;
+        }
+
+        .success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .error {
+            border-left: 4px solid #f56565;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Social Media API Test Frontend</h1>
+            <p>Test all backend endpoints with this simple interface</p>
+        </div>
+
+        <div class="auth-status">
+            <div class="auth-info">
+                <div>
+                    <span>Status: </span>
+                    <span id="authStatus">Not Authenticated</span>
+                </div>
+                <div>
+                    <span>User: </span>
+                    <span id="currentUser">None</span>
+                </div>
+                <div>
+                    <span>Token: </span>
+                    <span class="token-display" id="tokenDisplay">No token</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" data-tab="auth">Authentication</button>
+                <button class="tab" data-tab="users">Users</button>
+                <button class="tab" data-tab="profile">Profile</button>
+                <button class="tab" data-tab="social">Social</button>
+                <button class="tab" data-tab="posts">Posts</button>
+                <button class="tab" data-tab="comments">Comments</button>
+                <button class="tab" data-tab="feed">Feed</button>
+            </div>
+
+            <!-- Authentication Tab -->
+            <div class="tab-content active" id="auth">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Register</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="registerEmail" placeholder="user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="registerUsername" placeholder="johndoe">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="registerPassword" placeholder="SecurePass123!">
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="registerDOB">
+                            </div>
+                            <button onclick="register()">Register</button>
+                            <div class="response-box" id="registerResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Login</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="loginEmail" placeholder="user@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="loginPassword" placeholder="SecurePass123!">
+                            </div>
+                            <button onclick="login()">Login</button>
+                            <div class="response-box" id="loginResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Logout</h3>
+                        </div>
+                        <div class="section-body">
+                            <button onclick="logout()">Logout</button>
+                            <div class="response-box" id="logoutResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content" id="users">
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Search Users</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="searchUsername" placeholder="Enter username to search">
+                        </div>
+                        <button onclick="searchUsers()">Search</button>
+                        <div class="response-box" id="searchUsersResponse" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Get User Profile</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>User ID</label>
+                                <input type="text" id="profileUserId" placeholder="Enter user ID">
+                            </div>
+                            <button onclick="getUserProfile()">Get Profile</button>
+                            <div class="response-box" id="profileResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Update Bio</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>New Bio</label>
+                                <textarea id="updateBio" placeholder="Enter your new bio"></textarea>
+                            </div>
+                            <button onclick="updateBio()">Update Bio</button>
+                            <div class="response-box" id="updateBioResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Update Profile Picture</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Profile Picture URL</label>
+                                <input type="text" id="updateProfilePicture" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <button onclick="updateProfilePicture()">Update Picture</button>
+                            <div class="response-box" id="updatePictureResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Tab -->
+            <div class="tab-content" id="social">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Follow/Unfollow User</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Target User ID</label>
+                                <input type="text" id="followUserId" placeholder="Enter user ID to follow/unfollow">
+                            </div>
+                            <button onclick="followUnfollow()">Follow/Unfollow</button>
+                            <div class="response-box" id="followResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Get Followers</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>User ID</label>
+                                <input type="text" id="followersUserId" placeholder="Enter user ID">
+                            </div>
+                            <button onclick="getFollowers()">Get Followers</button>
+                            <div class="response-box" id="followersResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Get Following</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>User ID</label>
+                                <input type="text" id="followingUserId" placeholder="Enter user ID">
+                            </div>
+                            <button onclick="getFollowing()">Get Following</button>
+                            <div class="response-box" id="followingResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts Tab -->
+            <div class="tab-content" id="posts">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Create Post</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Content</label>
+                                <textarea id="postContent" placeholder="What's on your mind?"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Media URL (optional)</label>
+                                <input type="text" id="postMediaUrl" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <button onclick="createPost()">Create Post</button>
+                            <div class="response-box" id="createPostResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Get User Posts</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>User ID</label>
+                                <input type="text" id="postsUserId" placeholder="Enter user ID">
+                            </div>
+                            <button onclick="getUserPosts()">Get Posts</button>
+                            <div class="response-box" id="userPostsResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Update Post</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="updatePostId" placeholder="Enter post ID">
+                            </div>
+                            <div class="form-group">
+                                <label>New Content</label>
+                                <textarea id="updatePostContent" placeholder="Enter new content"></textarea>
+                            </div>
+                            <button onclick="updatePost()">Update Post</button>
+                            <div class="response-box" id="updatePostResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Delete Post</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="deletePostId" placeholder="Enter post ID">
+                            </div>
+                            <button class="btn-danger" onclick="deletePost()">Delete Post</button>
+                            <div class="response-box" id="deletePostResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Like/Unlike Post</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="likePostId" placeholder="Enter post ID">
+                            </div>
+                            <button onclick="likeUnlikePost()">Like/Unlike</button>
+                            <div class="response-box" id="likePostResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Tab -->
+            <div class="tab-content" id="comments">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Create Comment</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="commentPostId" placeholder="Enter post ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Comment</label>
+                                <textarea id="commentContent" placeholder="Write your comment"></textarea>
+                            </div>
+                            <button onclick="createComment()">Post Comment</button>
+                            <div class="response-box" id="createCommentResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Get Comments</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="getCommentsPostId" placeholder="Enter post ID">
+                            </div>
+                            <button onclick="getComments()">Get Comments</button>
+                            <div class="response-box" id="getCommentsResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Delete Comment</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Comment ID</label>
+                                <input type="text" id="deleteCommentId" placeholder="Enter comment ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Post ID</label>
+                                <input type="text" id="deleteCommentPostId" placeholder="Enter post ID">
+                            </div>
+                            <button class="btn-danger" onclick="deleteComment()">Delete Comment</button>
+                            <div class="response-box" id="deleteCommentResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Like/Unlike Comment</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label>Comment ID</label>
+                                <input type="text" id="likeCommentId" placeholder="Enter comment ID">
+                            </div>
+                            <button onclick="likeUnlikeComment()">Like/Unlike</button>
+                            <div class="response-box" id="likeCommentResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feed Tab -->
+            <div class="tab-content" id="feed">
+                <div class="grid">
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>User Feed</h3>
+                        </div>
+                        <div class="section-body">
+                            <button onclick="getUserFeed()">Get My Feed</button>
+                            <div class="response-box" id="userFeedResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Explore Feed</h3>
+                        </div>
+                        <div class="section-body">
+                            <button onclick="getExploreFeed()">Explore</button>
+                            <div class="response-box" id="exploreFeedResponse" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
