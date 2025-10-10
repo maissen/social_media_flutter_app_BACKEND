@@ -2,12 +2,12 @@ import os
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.comments_crud import create_comment, decrement_likes_count_of_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, get_likes_of_comment, increment_likes_count_of_comment, is_comment_liked_by_me, like_comment_of_post
+from src.comments_crud import create_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, get_likes_of_comment, increment_likes_count_of_comment, is_comment_liked_by_me, like_comment_of_post
 from src.posts_crud import decrement_comments_count_of_post, delete_a_post, dislike_post, get_a_single_post, get_posts_of_user, increment_comments_count_of_post, insert_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
-from src.users_crud import increment_posts_count_of_user, decrement_posts_count_of_user
+from src.users_crud import increment_posts_count_of_user
 
 # Directory where uploaded media will be stored
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/")

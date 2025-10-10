@@ -93,47 +93,47 @@ def update_user_bio(
         )
 
 
-@router.put("/update/profile-picture", response_model=GenericResponse)
-def update_profile_picture(
-    payload: UpdateProfilePictureRequest, 
-    current_user=Depends(get_current_user_from_token)
-):
-    """Update user profile picture."""
-    try:
+# @router.put("/update/profile-picture", response_model=GenericResponse)
+# def update_profile_picture(
+#     payload: UpdateProfilePictureRequest, 
+#     current_user=Depends(get_current_user_from_token)
+# ):
+#     """Update user profile picture."""
+#     try:
         
-        if not current_user:
-            return GenericResponse(
-                success=False,
-                data=None,
-                message="User not found",
-                timestamp=datetime.utcnow()
-            )
+#         if not current_user:
+#             return GenericResponse(
+#                 success=False,
+#                 data=None,
+#                 message="User not found",
+#                 timestamp=datetime.utcnow()
+#             )
         
-        # Update the profile picture
-        print("current user " + str(current_user.user_id))
-        current_user.profile_picture = payload.profile_picture
+#         # Update the profile picture
+#         print("current user " + str(current_user.user_id))
+#         current_user.profile_picture = payload.profile_picture
 
-        update_user_profile_picture(
-            user_id=current_user.user_id,
-            payload=UpdateProfilePictureRequest(profile_picture=current_user.profile_picture)
-        )
-        return GenericResponse(
-            success=True,
-            data={
-                "profile_picture": current_user.profile_picture
-            },
-            message="Profile picture updated successfully",
-            timestamp=datetime.utcnow()
-        )
+#         update_user_profile_picture(
+#             user_id=current_user.user_id,
+#             payload=UpdateProfilePictureRequest(profile_picture=current_user.profile_picture)
+#         )
+#         return GenericResponse(
+#             success=True,
+#             data={
+#                 "profile_picture": current_user.profile_picture
+#             },
+#             message="Profile picture updated successfully",
+#             timestamp=datetime.utcnow()
+#         )
     
-    except Exception as e:
-        print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed",
-            timestamp=datetime.utcnow()
-        )
+#     except Exception as e:
+#         print(e)
+#         return GenericResponse(
+#             success=False,
+#             data=None,
+#             message="Failed",
+#             timestamp=datetime.utcnow()
+#         )
     
 
 @router.get("/search", response_model=GenericResponse)
