@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media API Test Frontend</title>
+    <title>SocialConnect</title>
     <style>
         * {
             margin: 0;
@@ -13,642 +13,744 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        .auth-container {
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .auth-box {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+        .auth-box h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #667eea;
             text-align: center;
         }
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .auth-status {
-            background: #f7fafc;
-            padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .auth-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .auth-info span {
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .token-display {
-            font-family: monospace;
-            font-size: 12px;
-            color: #718096;
-            max-width: 500px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #e2e8f0;
+        .auth-box p {
+            text-align: center;
+            color: #65676b;
             margin-bottom: 30px;
-            overflow-x: auto;
-            gap: 5px;
-        }
-
-        .tab {
-            padding: 12px 24px;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #718096;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .tab:hover {
-            color: #667eea;
-        }
-
-        .tab.active {
-            color: #667eea;
-            border-bottom: 2px solid #667eea;
-            margin-bottom: -2px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .section {
-            margin-bottom: 30px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            background: #f7fafc;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .section-header h3 {
-            font-size: 16px;
-            color: #2d3748;
-        }
-
-        .section-body {
-            padding: 20px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #4a5568;
+            color: #050505;
             font-size: 14px;
         }
 
-        input, textarea, select {
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 14px;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            font-size: 15px;
             transition: border-color 0.3s;
         }
 
-        input:focus, textarea:focus, select:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        button {
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            font-size: 14px;
         }
 
-        button:hover {
+        .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        button:active {
+        .btn-primary:active {
             transform: translateY(0);
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #65676b;
         }
 
-        .response-box {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            max-height: 400px;
-            overflow-y: auto;
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        .response-box pre {
-            margin: 0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: #2d3748;
+        .auth-switch a:hover {
+            text-decoration: underline;
         }
 
-        .success {
-            border-left: 4px solid #48bb78;
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .error {
-            border-left: 4px solid #f56565;
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
-        .btn-group {
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .app-container.active {
+            display: block;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e4e6eb;
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .navbar-menu {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        .navbar-search {
+            padding: 10px 16px;
+            border: 1px solid #dddfe2;
+            border-radius: 24px;
+            width: 240px;
+            font-size: 14px;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+        .navbar-search:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
-        .grid {
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .navbar-username {
+            font-weight: 600;
+            color: #050505;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: #e4e6eb;
+            color: #050505;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-logout:hover {
+            background: #d8dadf;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 300px 1fr 300px;
             gap: 20px;
         }
 
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-card h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #050505;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #65676b;
+            margin-top: 4px;
+        }
+
+        .feed-container {
+            max-width: 680px;
+        }
+
+        .create-post-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .create-post-input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e4e6eb;
+            border-radius: 24px;
+            font-size: 15px;
+            background: #f0f2f5;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .create-post-input:hover {
+            background: #e4e6eb;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .post-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e4e6eb;
+        }
+
+        .post-author-info {
+            flex: 1;
+        }
+
+        .post-author-name {
+            font-weight: 600;
+            color: #050505;
+            font-size: 15px;
+        }
+
+        .post-time {
+            font-size: 13px;
+            color: #65676b;
+        }
+
+        .post-menu-btn {
+            background: none;
+            border: none;
+            color: #65676b;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .post-menu-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .post-content {
+            padding: 0 20px 16px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #050505;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+        }
+
+        .post-stats {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #e4e6eb;
+            font-size: 14px;
+            color: #65676b;
+        }
+
+        .post-actions {
+            padding: 8px 20px 12px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #e4e6eb;
+        }
+
+        .post-action-btn {
+            flex: 1;
+            padding: 8px;
+            background: none;
+            border: none;
+            color: #65676b;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.3s;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .post-action-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .post-action-btn.liked {
+            color: #667eea;
+        }
+
+        .comments-section {
+            padding: 20px;
+            border-top: 1px solid #e4e6eb;
+            background: #f7f8fa;
+            display: none;
+        }
+
+        .comments-section.active {
+            display: block;
+        }
+
+        .comment-input-wrapper {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e4e6eb;
+            border-radius: 24px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-comment {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-comment:hover {
+            background: #5568d3;
+        }
+
+        .comment {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e4e6eb;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 14px;
+            color: #050505;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #65676b;
+        }
+
+        .comment-content {
+            font-size: 14px;
+            color: #050505;
+            margin-bottom: 8px;
+            padding-left: 42px;
+        }
+
+        .comment-actions {
+            padding-left: 42px;
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .comment-action {
+            color: #65676b;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .comment-action:hover {
+            text-decoration: underline;
+        }
+
+        .comment-action.liked {
+            color: #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e4e6eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #050505;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #65676b;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f0f2f5;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 14px;
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .modal-body textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-body input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #65676b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #65676b;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #050505;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
         @media (max-width: 768px) {
-            body {
-                padding: 0;
+            .navbar-content {
+                padding: 0 15px;
             }
 
-            .container {
-                border-radius: 0;
+            .navbar-search {
+                width: 180px;
             }
 
-            .header {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 22px;
+            .navbar-username {
+                display: none;
             }
 
             .main-content {
-                padding: 20px;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
+                padding: 0 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Social Media API Test Frontend</h1>
-            <p>Test all backend endpoints with this simple interface</p>
-        </div>
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <h1>SocialConnect</h1>
+            <p id="authSubtitle">Connect with friends and the world</p>
 
-        <div class="auth-status">
-            <div class="auth-info">
-                <div>
-                    <span>Status: </span>
-                    <span id="authStatus">Not Authenticated</span>
+            <div id="authMessage"></div>
+
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
                 </div>
-                <div>
-                    <span>User: </span>
-                    <span id="currentUser">None</span>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
                 </div>
-                <div>
-                    <span>Token: </span>
-                    <span class="token-display" id="tokenDisplay">No token</span>
+                <button class="btn-primary" onclick="login()">Log In</button>
+                <div class="auth-switch">
+                    Don't have an account? <a onclick="showRegisterForm()">Sign Up</a>
+                </div>
+            </div>
+
+            <div id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="registerUsername" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="registerDOB">
+                </div>
+                <button class="btn-primary" onclick="register()">Sign Up</button>
+                <div class="auth-switch">
+                    Already have an account? <a onclick="showLoginForm()">Log In</a>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+        <nav class="navbar">
+            <div class="navbar-content">
+                <div class="navbar-brand">SocialConnect</div>
+                <div class="navbar-menu">
+                    <input type="text" class="navbar-search" id="searchInput" placeholder="Search users..." onkeypress="handleSearch(event)">
+                    <div class="navbar-user">
+                        <img id="navAvatar" src="https://via.placeholder.com/40" alt="User">
+                        <span class="navbar-username" id="navUsername">User</span>
+                        <button class="btn-logout" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
         <div class="main-content">
-            <div class="tabs">
-                <button class="tab active" data-tab="auth">Authentication</button>
-                <button class="tab" data-tab="users">Users</button>
-                <button class="tab" data-tab="profile">Profile</button>
-                <button class="tab" data-tab="social">Social</button>
-                <button class="tab" data-tab="posts">Posts</button>
-                <button class="tab" data-tab="comments">Comments</button>
-                <button class="tab" data-tab="feed">Feed</button>
-            </div>
-
-            <!-- Authentication Tab -->
-            <div class="tab-content active" id="auth">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Register</h3>
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <h3 id="sidebarUsername">My Profile</h3>
+                    <p id="sidebarBio" style="color: #65676b; font-size: 14px; margin-top: 8px;">Loading...</p>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <div class="stat-value" id="postsCount">0</div>
+                            <div class="stat-label">Posts</div>
                         </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="registerEmail" placeholder="user@example.com">
-                            </div>
-                            <div class="form-group">
-                                <label>Username</label>
-                                <input type="text" id="registerUsername" placeholder="johndoe">
-                            </div>
-                            <div class="form-group">
-                                <label>Password</label>
-                                <input type="password" id="registerPassword" placeholder="SecurePass123!">
-                            </div>
-                            <div class="form-group">
-                                <label>Date of Birth</label>
-                                <input type="date" id="registerDOB">
-                            </div>
-                            <button onclick="register()">Register</button>
-                            <div class="response-box" id="registerResponse" style="display:none;"></div>
+                        <div class="stat">
+                            <div class="stat-value" id="followersCount">0</div>
+                            <div class="stat-label">Followers</div>
                         </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Login</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="loginEmail" placeholder="user@example.com">
-                            </div>
-                            <div class="form-group">
-                                <label>Password</label>
-                                <input type="password" id="loginPassword" placeholder="SecurePass123!">
-                            </div>
-                            <button onclick="login()">Login</button>
-                            <div class="response-box" id="loginResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Logout</h3>
-                        </div>
-                        <div class="section-body">
-                            <button onclick="logout()">Logout</button>
-                            <div class="response-box" id="logoutResponse" style="display:none;"></div>
+                        <div class="stat">
+                            <div class="stat-value" id="followingCount">0</div>
+                            <div class="stat-label">Following</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
 
-            <!-- Users Tab -->
-            <div class="tab-content" id="users">
-                <div class="section">
-                    <div class="section-header">
-                        <h3>Search Users</h3>
-                    </div>
-                    <div class="section-body">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="searchUsername" placeholder="Enter username to search">
-                        </div>
-                        <button onclick="searchUsers()">Search</button>
-                        <div class="response-box" id="searchUsersResponse" style="display:none;"></div>
-                    </div>
+            <main class="feed-container">
+                <div class="create-post-card">
+                    <input type="text" class="create-post-input" placeholder="What's on your mind?" onclick="openCreatePostModal()" readonly>
                 </div>
-            </div>
 
-            <!-- Profile Tab -->
-            <div class="tab-content" id="profile">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Get User Profile</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>User ID</label>
-                                <input type="text" id="profileUserId" placeholder="Enter user ID">
-                            </div>
-                            <button onclick="getUserProfile()">Get Profile</button>
-                            <div class="response-box" id="profileResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Update Bio</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>New Bio</label>
-                                <textarea id="updateBio" placeholder="Enter your new bio"></textarea>
-                            </div>
-                            <button onclick="updateBio()">Update Bio</button>
-                            <div class="response-box" id="updateBioResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Update Profile Picture</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Profile Picture URL</label>
-                                <input type="text" id="updateProfilePicture" placeholder="https://example.com/image.jpg">
-                            </div>
-                            <button onclick="updateProfilePicture()">Update Picture</button>
-                            <div class="response-box" id="updatePictureResponse" style="display:none;"></div>
-                        </div>
-                    </div>
+                <div id="feedContent">
+                    <div class="loading">Loading your feed...</div>
                 </div>
+            </main>
+
+            <aside class="sidebar">
+            </aside>
+        </div>
+    </div>
+
+    <div class="modal" id="createPostModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Post</h2>
+                <button class="modal-close" onclick="closeCreatePostModal()">&times;</button>
             </div>
-
-            <!-- Social Tab -->
-            <div class="tab-content" id="social">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Follow/Unfollow User</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Target User ID</label>
-                                <input type="text" id="followUserId" placeholder="Enter user ID to follow/unfollow">
-                            </div>
-                            <button onclick="followUnfollow()">Follow/Unfollow</button>
-                            <div class="response-box" id="followResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Get Followers</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>User ID</label>
-                                <input type="text" id="followersUserId" placeholder="Enter user ID">
-                            </div>
-                            <button onclick="getFollowers()">Get Followers</button>
-                            <div class="response-box" id="followersResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Get Following</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>User ID</label>
-                                <input type="text" id="followingUserId" placeholder="Enter user ID">
-                            </div>
-                            <button onclick="getFollowing()">Get Following</button>
-                            <div class="response-box" id="followingResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Posts Tab -->
-            <div class="tab-content" id="posts">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Create Post</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Content</label>
-                                <textarea id="postContent" placeholder="What's on your mind?"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Media URL (optional)</label>
-                                <input type="text" id="postMediaUrl" placeholder="https://example.com/image.jpg">
-                            </div>
-                            <button onclick="createPost()">Create Post</button>
-                            <div class="response-box" id="createPostResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Get User Posts</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>User ID</label>
-                                <input type="text" id="postsUserId" placeholder="Enter user ID">
-                            </div>
-                            <button onclick="getUserPosts()">Get Posts</button>
-                            <div class="response-box" id="userPostsResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Update Post</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="updatePostId" placeholder="Enter post ID">
-                            </div>
-                            <div class="form-group">
-                                <label>New Content</label>
-                                <textarea id="updatePostContent" placeholder="Enter new content"></textarea>
-                            </div>
-                            <button onclick="updatePost()">Update Post</button>
-                            <div class="response-box" id="updatePostResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Delete Post</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="deletePostId" placeholder="Enter post ID">
-                            </div>
-                            <button class="btn-danger" onclick="deletePost()">Delete Post</button>
-                            <div class="response-box" id="deletePostResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Like/Unlike Post</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="likePostId" placeholder="Enter post ID">
-                            </div>
-                            <button onclick="likeUnlikePost()">Like/Unlike</button>
-                            <div class="response-box" id="likePostResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Comments Tab -->
-            <div class="tab-content" id="comments">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Create Comment</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="commentPostId" placeholder="Enter post ID">
-                            </div>
-                            <div class="form-group">
-                                <label>Comment</label>
-                                <textarea id="commentContent" placeholder="Write your comment"></textarea>
-                            </div>
-                            <button onclick="createComment()">Post Comment</button>
-                            <div class="response-box" id="createCommentResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Get Comments</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="getCommentsPostId" placeholder="Enter post ID">
-                            </div>
-                            <button onclick="getComments()">Get Comments</button>
-                            <div class="response-box" id="getCommentsResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Delete Comment</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Comment ID</label>
-                                <input type="text" id="deleteCommentId" placeholder="Enter comment ID">
-                            </div>
-                            <div class="form-group">
-                                <label>Post ID</label>
-                                <input type="text" id="deleteCommentPostId" placeholder="Enter post ID">
-                            </div>
-                            <button class="btn-danger" onclick="deleteComment()">Delete Comment</button>
-                            <div class="response-box" id="deleteCommentResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Like/Unlike Comment</h3>
-                        </div>
-                        <div class="section-body">
-                            <div class="form-group">
-                                <label>Comment ID</label>
-                                <input type="text" id="likeCommentId" placeholder="Enter comment ID">
-                            </div>
-                            <button onclick="likeUnlikeComment()">Like/Unlike</button>
-                            <div class="response-box" id="likeCommentResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feed Tab -->
-            <div class="tab-content" id="feed">
-                <div class="grid">
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>User Feed</h3>
-                        </div>
-                        <div class="section-body">
-                            <button onclick="getUserFeed()">Get My Feed</button>
-                            <div class="response-box" id="userFeedResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Explore Feed</h3>
-                        </div>
-                        <div class="section-body">
-                            <button onclick="getExploreFeed()">Explore</button>
-                            <div class="response-box" id="exploreFeedResponse" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body">
+                <textarea id="createPostContent" placeholder="What's on your mind?"></textarea>
+                <input type="text" id="createPostImage" placeholder="Image URL (optional)">
+                <button class="btn-primary" onclick="createPost()">Post</button>
             </div>
         </div>
     </div>

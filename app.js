@@ -4,62 +4,32 @@ let authToken = localStorage.getItem('authToken') || null;
 let currentUserData = JSON.parse(localStorage.getItem('currentUser')) || null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    setupTabs();
-    updateAuthStatus();
+    if (authToken && currentUserData) {
+        showApp();
+    }
 });
 
-function setupTabs() {
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabName = tab.getAttribute('data-tab');
-            switchTab(tabName);
-        });
-    });
+function showAuthMessage(message, isError = false) {
+    const messageDiv = document.getElementById('authMessage');
+    messageDiv.className = isError ? 'error-message' : 'success-message';
+    messageDiv.textContent = message;
+    messageDiv.style.display = 'block';
+
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 5000);
 }
 
-function switchTab(tabName) {
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    document.getElementById(tabName).classList.add('active');
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('authSubtitle').textContent = 'Create a new account';
 }
 
-function updateAuthStatus() {
-    const statusElement = document.getElementById('authStatus');
-    const userElement = document.getElementById('currentUser');
-    const tokenElement = document.getElementById('tokenDisplay');
-
-    if (authToken && currentUserData) {
-        statusElement.textContent = 'Authenticated';
-        statusElement.style.color = '#48bb78';
-        userElement.textContent = currentUserData.username || currentUserData.email;
-        tokenElement.textContent = authToken.substring(0, 30) + '...';
-    } else {
-        statusElement.textContent = 'Not Authenticated';
-        statusElement.style.color = '#f56565';
-        userElement.textContent = 'None';
-        tokenElement.textContent = 'No token';
-    }
-}
-
-function displayResponse(elementId, data, isError = false) {
-    const element = document.getElementById(elementId);
-    element.style.display = 'block';
-    element.className = 'response-box ' + (isError ? 'error' : 'success');
-    element.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-}
-
-function getAuthHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-    };
+function showLoginForm() {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('authSubtitle').textContent = 'Connect with friends and the world';
 }
 
 async function register() {
@@ -67,6 +37,11 @@ async function register() {
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     const dateOfBirth = document.getElementById('registerDOB').value;
+
+    if (!email || !username || !password || !dateOfBirth) {
+        showAuthMessage('Please fill in all fields', true);
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -81,15 +56,26 @@ async function register() {
         });
 
         const data = await response.json();
-        displayResponse('registerResponse', data, !response.ok);
+
+        if (response.ok) {
+            showAuthMessage('Registration successful! Please log in.');
+            showLoginForm();
+        } else {
+            showAuthMessage(data.message || 'Registration failed', true);
+        }
     } catch (error) {
-        displayResponse('registerResponse', { error: error.message }, true);
+        showAuthMessage('Network error. Please try again.', true);
     }
 }
 
 async function login() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+        showAuthMessage('Please fill in all fields', true);
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -105,18 +91,182 @@ async function login() {
             currentUserData = data.data.user;
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('currentUser', JSON.stringify(currentUserData));
-            updateAuthStatus();
+            showApp();
+        } else {
+            showAuthMessage(data.message || 'Login failed', true);
         }
-
-        displayResponse('loginResponse', data, !response.ok);
     } catch (error) {
-        displayResponse('loginResponse', { error: error.message }, true);
+        showAuthMessage('Network error. Please try again.', true);
     }
 }
 
 async function logout() {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+
+    authToken = null;
+    currentUserData = null;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+
+    document.getElementById('authContainer').style.display = 'flex';
+    document.getElementById('appContainer').classList.remove('active');
+}
+
+function getAuthHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+    };
+}
+
+function showApp() {
+    document.getElementById('authContainer').style.display = 'none';
+    document.getElementById('appContainer').classList.add('active');
+
+    updateNavbar();
+    loadUserProfile();
+    loadFeed();
+}
+
+function updateNavbar() {
+    const username = currentUserData.username || currentUserData.email;
+    const profilePicture = currentUserData.profile_picture || 'https://via.placeholder.com/40';
+
+    document.getElementById('navUsername').textContent = username;
+    document.getElementById('navAvatar').src = profilePicture;
+}
+
+async function loadUserProfile() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/profile/${currentUserData.user_id}`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.data) {
+            document.getElementById('sidebarUsername').textContent = data.data.username;
+            document.getElementById('sidebarBio').textContent = data.data.bio || 'No bio yet';
+            document.getElementById('postsCount').textContent = data.data.posts_count || 0;
+            document.getElementById('followersCount').textContent = data.data.followers_count || 0;
+            document.getElementById('followingCount').textContent = data.data.following_count || 0;
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+async function loadFeed() {
+    const feedContent = document.getElementById('feedContent');
+    feedContent.innerHTML = '<div class="loading">Loading your feed...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/feed/explore`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.data) {
+            displayFeed(data.data);
+        } else {
+            feedContent.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Follow people to see their posts in your feed</p></div>';
+        }
+    } catch (error) {
+        feedContent.innerHTML = '<div class="empty-state"><h3>Error loading feed</h3><p>Please try again later</p></div>';
+    }
+}
+
+function displayFeed(posts) {
+    const feedContent = document.getElementById('feedContent');
+
+    if (!posts || posts.length === 0) {
+        feedContent.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Be the first to share something!</p></div>';
+        return;
+    }
+
+    feedContent.innerHTML = '';
+
+    posts.forEach(post => {
+        const postCard = createPostCard(post);
+        feedContent.appendChild(postCard);
+    });
+}
+
+function createPostCard(post) {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    card.dataset.postId = post.post_id;
+
+    const authorName = post.author ? post.author.username : 'Unknown';
+    const authorAvatar = post.author && post.author.profile_picture ? post.author.profile_picture : 'https://via.placeholder.com/40';
+    const postTime = formatTime(post.created_at);
+    const isLiked = post.is_liked || false;
+    const likesCount = post.likes_count || 0;
+    const commentsCount = post.comments_count || 0;
+
+    card.innerHTML = `
+        <div class="post-header">
+            <img class="post-avatar" src="${authorAvatar}" alt="${authorName}">
+            <div class="post-author-info">
+                <div class="post-author-name">${authorName}</div>
+                <div class="post-time">${postTime}</div>
+            </div>
+        </div>
+        <div class="post-content">${post.content}</div>
+        ${post.media_url ? `<img class="post-image" src="${post.media_url}" alt="Post image">` : ''}
+        <div class="post-stats">
+            <span>${likesCount} likes</span>
+            <span>${commentsCount} comments</span>
+        </div>
+        <div class="post-actions">
+            <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post.post_id}')">
+                ${isLiked ? '❤️' : '🤍'} Like
+            </button>
+            <button class="post-action-btn" onclick="toggleComments('${post.post_id}')">
+                💬 Comment
+            </button>
+        </div>
+        <div class="comments-section" id="comments-${post.post_id}">
+            <div class="comment-input-wrapper">
+                <input type="text" class="comment-input" id="comment-input-${post.post_id}" placeholder="Write a comment...">
+                <button class="btn-comment" onclick="postComment('${post.post_id}')">Post</button>
+            </div>
+            <div id="comments-list-${post.post_id}">
+                <div class="loading">Loading comments...</div>
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString();
+}
+
+async function toggleLike(postId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/like-deslike/${postId}`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
@@ -124,132 +274,154 @@ async function logout() {
         const data = await response.json();
 
         if (response.ok) {
-            authToken = null;
-            currentUserData = null;
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            updateAuthStatus();
+            const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+            const likeBtn = postCard.querySelector('.post-action-btn');
+            const isLiked = data.data.is_liked;
+
+            likeBtn.classList.toggle('liked', isLiked);
+            likeBtn.innerHTML = `${isLiked ? '❤️' : '🤍'} Like`;
+
+            const statsDiv = postCard.querySelector('.post-stats span:first-child');
+            const currentLikes = parseInt(statsDiv.textContent);
+            statsDiv.textContent = `${isLiked ? currentLikes + 1 : currentLikes - 1} likes`;
         }
-
-        displayResponse('logoutResponse', data, !response.ok);
     } catch (error) {
-        displayResponse('logoutResponse', { error: error.message }, true);
+        console.error('Error toggling like:', error);
     }
 }
 
-async function searchUsers() {
-    const username = document.getElementById('searchUsername').value;
+async function toggleComments(postId) {
+    const commentsSection = document.getElementById(`comments-${postId}`);
+    const isVisible = commentsSection.classList.contains('active');
+
+    if (isVisible) {
+        commentsSection.classList.remove('active');
+    } else {
+        commentsSection.classList.add('active');
+        await loadComments(postId);
+    }
+}
+
+async function loadComments(postId) {
+    const commentsList = document.getElementById(`comments-list-${postId}`);
+    commentsList.innerHTML = '<div class="loading">Loading comments...</div>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/search?username=${encodeURIComponent(username)}`, {
+        const response = await fetch(`${API_BASE_URL}/posts/comments/all?post_id=${postId}`, {
             headers: getAuthHeaders()
         });
 
         const data = await response.json();
-        displayResponse('searchUsersResponse', data, !response.ok);
+
+        if (response.ok && data.data && data.data.length > 0) {
+            commentsList.innerHTML = '';
+            data.data.forEach(comment => {
+                const commentEl = createCommentElement(comment);
+                commentsList.appendChild(commentEl);
+            });
+        } else {
+            commentsList.innerHTML = '<p style="text-align: center; color: #65676b;">No comments yet</p>';
+        }
     } catch (error) {
-        displayResponse('searchUsersResponse', { error: error.message }, true);
+        commentsList.innerHTML = '<p style="text-align: center; color: #65676b;">Error loading comments</p>';
     }
 }
 
-async function getUserProfile() {
-    const userId = document.getElementById('profileUserId').value;
+function createCommentElement(comment) {
+    const div = document.createElement('div');
+    div.className = 'comment';
+    div.dataset.commentId = comment.comment_id;
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/profile/${userId}`, {
-            headers: getAuthHeaders()
-        });
+    const isLiked = comment.is_liked_by_me || false;
+    const likesCount = comment.likes_nbr || 0;
 
-        const data = await response.json();
-        displayResponse('profileResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('profileResponse', { error: error.message }, true);
-    }
+    div.innerHTML = `
+        <div class="comment-header">
+            <img class="comment-avatar" src="${comment.profile_picture || 'https://via.placeholder.com/32'}" alt="${comment.username}">
+            <div>
+                <div class="comment-author">${comment.username}</div>
+                <div class="comment-time">${formatTime(comment.created_at)}</div>
+            </div>
+        </div>
+        <div class="comment-content">${comment.comment_payload}</div>
+        <div class="comment-actions">
+            <span class="comment-action ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike('${comment.comment_id}')">
+                ${isLiked ? '❤️' : '🤍'} ${likesCount} Like${likesCount !== 1 ? 's' : ''}
+            </span>
+        </div>
+    `;
+
+    return div;
 }
 
-async function updateBio() {
-    const newBio = document.getElementById('updateBio').value;
+async function postComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const content = input.value.trim();
+
+    if (!content) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/update/bio`, {
-            method: 'PUT',
+        const response = await fetch(`${API_BASE_URL}/posts/comments/create?post_id=${postId}`, {
+            method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ new_bio: newBio })
+            body: JSON.stringify({ content })
         });
 
-        const data = await response.json();
-        displayResponse('updateBioResponse', data, !response.ok);
+        if (response.ok) {
+            input.value = '';
+            await loadComments(postId);
+
+            const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+            const statsDiv = postCard.querySelector('.post-stats span:last-child');
+            const currentCount = parseInt(statsDiv.textContent);
+            statsDiv.textContent = `${currentCount + 1} comments`;
+        }
     } catch (error) {
-        displayResponse('updateBioResponse', { error: error.message }, true);
+        console.error('Error posting comment:', error);
     }
 }
 
-async function updateProfilePicture() {
-    const profilePicture = document.getElementById('updateProfilePicture').value;
-
+async function toggleCommentLike(commentId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/update/profile-picture`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ profile_picture: profilePicture })
-        });
-
-        const data = await response.json();
-        displayResponse('updatePictureResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('updatePictureResponse', { error: error.message }, true);
-    }
-}
-
-async function followUnfollow() {
-    const targetUserId = document.getElementById('followUserId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/follow-unfollow/?target_user_id=${targetUserId}`, {
+        const response = await fetch(`${API_BASE_URL}/posts/comments/like-deslike/${commentId}`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
 
         const data = await response.json();
-        displayResponse('followResponse', data, !response.ok);
+
+        if (response.ok) {
+            const commentEl = document.querySelector(`[data-comment-id="${commentId}"]`);
+            const likeAction = commentEl.querySelector('.comment-action');
+            const isLiked = data.data.is_liked;
+            const likesCount = data.data.likes_nbr || 0;
+
+            likeAction.classList.toggle('liked', isLiked);
+            likeAction.innerHTML = `${isLiked ? '❤️' : '🤍'} ${likesCount} Like${likesCount !== 1 ? 's' : ''}`;
+        }
     } catch (error) {
-        displayResponse('followResponse', { error: error.message }, true);
+        console.error('Error toggling comment like:', error);
     }
 }
 
-async function getFollowers() {
-    const userId = document.getElementById('followersUserId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/followers?user_id=${userId}`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('followersResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('followersResponse', { error: error.message }, true);
-    }
+function openCreatePostModal() {
+    document.getElementById('createPostModal').classList.add('active');
 }
 
-async function getFollowing() {
-    const userId = document.getElementById('followingUserId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/followings?user_id=${userId}`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('followingResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('followingResponse', { error: error.message }, true);
-    }
+function closeCreatePostModal() {
+    document.getElementById('createPostModal').classList.remove('active');
+    document.getElementById('createPostContent').value = '';
+    document.getElementById('createPostImage').value = '';
 }
 
 async function createPost() {
-    const content = document.getElementById('postContent').value;
-    const mediaUrl = document.getElementById('postMediaUrl').value;
+    const content = document.getElementById('createPostContent').value.trim();
+    const mediaUrl = document.getElementById('createPostImage').value.trim();
+
+    if (!content) {
+        alert('Please write something!');
+        return;
+    }
 
     const body = { content };
     if (mediaUrl) {
@@ -263,174 +435,38 @@ async function createPost() {
             body: JSON.stringify(body)
         });
 
-        const data = await response.json();
-        displayResponse('createPostResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('createPostResponse', { error: error.message }, true);
-    }
-}
-
-async function getUserPosts() {
-    const userId = document.getElementById('postsUserId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/${userId}`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('userPostsResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('userPostsResponse', { error: error.message }, true);
-    }
-}
-
-async function updatePost() {
-    const postId = document.getElementById('updatePostId').value;
-    const newContent = document.getElementById('updatePostContent').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/update/${postId}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ new_content: newContent })
-        });
-
-        const data = await response.json();
-        displayResponse('updatePostResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('updatePostResponse', { error: error.message }, true);
-    }
-}
-
-async function deletePost() {
-    const postId = document.getElementById('deletePostId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/delete/${postId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-
-        if (response.status === 204) {
-            displayResponse('deletePostResponse', { success: true, message: 'Post deleted successfully' }, false);
+        if (response.ok) {
+            closeCreatePostModal();
+            loadFeed();
+            loadUserProfile();
         } else {
-            const data = await response.json();
-            displayResponse('deletePostResponse', data, !response.ok);
+            alert('Failed to create post');
         }
     } catch (error) {
-        displayResponse('deletePostResponse', { error: error.message }, true);
+        alert('Network error. Please try again.');
     }
 }
 
-async function likeUnlikePost() {
-    const postId = document.getElementById('likePostId').value;
+async function handleSearch(event) {
+    if (event.key === 'Enter') {
+        const username = document.getElementById('searchInput').value.trim();
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/like-deslike/${postId}`, {
-            method: 'POST',
-            headers: getAuthHeaders()
-        });
+        if (!username) return;
 
-        const data = await response.json();
-        displayResponse('likePostResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('likePostResponse', { error: error.message }, true);
-    }
-}
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/search?username=${encodeURIComponent(username)}`, {
+                headers: getAuthHeaders()
+            });
 
-async function createComment() {
-    const postId = document.getElementById('commentPostId').value;
-    const content = document.getElementById('commentContent').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/comments/create?post_id=${postId}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ content })
-        });
-
-        const data = await response.json();
-        displayResponse('createCommentResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('createCommentResponse', { error: error.message }, true);
-    }
-}
-
-async function getComments() {
-    const postId = document.getElementById('getCommentsPostId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/comments/all?post_id=${postId}`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('getCommentsResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('getCommentsResponse', { error: error.message }, true);
-    }
-}
-
-async function deleteComment() {
-    const commentId = document.getElementById('deleteCommentId').value;
-    const postId = document.getElementById('deleteCommentPostId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/comments/delete?comment_id=${commentId}&post_id=${postId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-
-        if (response.status === 204) {
-            displayResponse('deleteCommentResponse', { success: true, message: 'Comment deleted successfully' }, false);
-        } else {
             const data = await response.json();
-            displayResponse('deleteCommentResponse', data, !response.ok);
+
+            if (response.ok && data.data) {
+                alert(`Found user: ${data.data.username}\nFollowers: ${data.data.followers_count}\nFollowing: ${data.data.following_count}`);
+            } else {
+                alert('User not found');
+            }
+        } catch (error) {
+            alert('Search error');
         }
-    } catch (error) {
-        displayResponse('deleteCommentResponse', { error: error.message }, true);
-    }
-}
-
-async function likeUnlikeComment() {
-    const commentId = document.getElementById('likeCommentId').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/posts/comments/like-deslike/${commentId}`, {
-            method: 'POST',
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('likeCommentResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('likeCommentResponse', { error: error.message }, true);
-    }
-}
-
-async function getUserFeed() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/feed/`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('userFeedResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('userFeedResponse', { error: error.message }, true);
-    }
-}
-
-async function getExploreFeed() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/feed/explore`, {
-            headers: getAuthHeaders()
-        });
-
-        const data = await response.json();
-        displayResponse('exploreFeedResponse', data, !response.ok);
-    } catch (error) {
-        displayResponse('exploreFeedResponse', { error: error.message }, true);
     }
 }
