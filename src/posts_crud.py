@@ -40,7 +40,7 @@ def insert_new_post(post: PostSchema) -> PostSchema:
     return post
 
 
-def get_a_single_post(post_id: int) -> Optional[PostSchema]:
+def get_post_by_id(post_id: int) -> Optional[PostSchema]:
     """Retrieve a single post by ID."""
     posts = load_pickle(POSTS_DB)
     return next((p for p in posts if p.post_id == post_id), None)
