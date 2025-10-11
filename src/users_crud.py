@@ -30,7 +30,7 @@ def get_user_by_id(user_id: int) -> Optional[UserSchema]:
     users = load_users()
     return next((user for user in users if user.user_id == user_id), None)
 
-def insert_user(user: UserSchema):
+def insert_new_user(user: UserSchema):
     """Insert a new user into the file-based database."""
     users = load_users()
     users.append(user)

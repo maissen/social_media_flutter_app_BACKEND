@@ -4,7 +4,7 @@ from src.schemas.auth import RegisterUserRequest, LoginRequest
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_password_hash, verify_password, create_access_token
 from src.services.auth_service import logout_user
-from src.users_crud import insert_user, get_user_by_email, generate_new_user_id
+from src.users_crud import insert_new_user, get_user_by_email, generate_new_user_id
 from src.schemas.users import UserSchema, UserProfileSchema
 
 router = APIRouter(prefix="", tags=["Authentication"])
@@ -38,7 +38,7 @@ def register_user(payload: RegisterUserRequest):
         )
 
         # add user to db
-        insert_user(user=user)
+        insert_new_user(user=user)
 
         return GenericResponse(
             success=True,
