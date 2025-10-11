@@ -66,12 +66,6 @@ def delete_a_post(post_id: int) -> bool:
         return False  # Not found
 
     save_pickle(POSTS_DB, new_posts)
-
-    # Also remove related likes/comments
-    likes = [l for l in load_pickle(LIKES_DB) if l[1] != post_id]
-    comments = [c for c in load_pickle(COMMENTS_DB) if getattr(c, "post_id", None) != post_id]
-    save_pickle(LIKES_DB, likes)
-    save_pickle(COMMENTS_DB, comments)
     return True
 
 
@@ -99,20 +93,16 @@ def is_post_liked_by_me(user_id: int, post_id: int) -> bool:
 def like_post(user_id: int, post_id: int) -> bool:
     """Like a post if not already liked."""
     likes = load_pickle(LIKES_DB)
-    if (user_id, post_id) in likes:
+
+    if is_post_liked_by_me(user_id, post_id):
         return False
 
     likes.append((user_id, post_id))
     save_pickle(LIKES_DB, likes)
 
     # Increment like count in post
-    posts = load_pickle(POSTS_DB)
-    for p in posts:
-        if p.post_id == post_id:
-            p.likes_nbr += 1
-            break
-    save_pickle(POSTS_DB, posts)
-    return True
+    if increment_likes_count_of_post(post_id=post_id):
+        return True
 
 
 def dislike_post(user_id: int, post_id: int) -> bool:
@@ -125,13 +115,8 @@ def dislike_post(user_id: int, post_id: int) -> bool:
     save_pickle(LIKES_DB, likes)
 
     # Decrement like count
-    posts = load_pickle(POSTS_DB)
-    for p in posts:
-        if p.post_id == post_id and p.likes_nbr > 0:
-            p.likes_nbr -= 1
-            break
-    save_pickle(POSTS_DB, posts)
-    return True
+    if decrement_likes_count_of_post(post_id=post_id):
+        return True
 
 
 # ====================================================
@@ -141,7 +126,8 @@ def dislike_post(user_id: int, post_id: int) -> bool:
 def add_comment_to_post(user_id: int, post_id: int, comment_payload: str) -> Optional[CommentProfile]:
     """Add a comment to a post."""
     posts = load_pickle(POSTS_DB)
-    if not any(p.post_id == post_id for p in posts):
+    
+    if not get_post_by_id(post_id):
         return None
 
     user = get_user_by_id(user_id)
@@ -158,17 +144,14 @@ def add_comment_to_post(user_id: int, post_id: int, comment_payload: str) -> Opt
         comment_payload=comment_payload,
         created_at=datetime.utcnow()
     )
+
     comments.append(new_comment)
     save_pickle(COMMENTS_DB, comments)
 
-    # Update post comment counter
-    for p in posts:
-        if p.post_id == post_id:
-            p.comments_nbr += 1
-            break
-    save_pickle(POSTS_DB, posts)
+    if increment_comments_count_of_post(post_id):
+        return new_comment
 
-    return new_comment
+
 
 
 def remove_comment_from_post(comment_id: int, post_id: int) -> bool:
@@ -182,12 +165,8 @@ def remove_comment_from_post(comment_id: int, post_id: int) -> bool:
     save_pickle(COMMENTS_DB, comments)
 
     # Decrement post comment counter
-    posts = load_pickle(POSTS_DB)
-    for p in posts:
-        if p.post_id == post_id and p.comments_nbr > 0:
-            p.comments_nbr -= 1
-            break
-    save_pickle(POSTS_DB, posts)
+    if not decrement_comments_count_of_post(post_id):
+        return False
 
     return True
 
@@ -211,28 +190,28 @@ def get_posts_count() -> int:
     return len(posts)
 
 
-def get_likes_count(post_id: int) -> int:
-    """
-    Get total likes count.
-    - If post_id provided → likes on that post.
-    - If user_id provided → likes given by that user.
-    """
-    likes = load_pickle(LIKES_DB)
-    if post_id:
-        return sum(1 for (_, pid) in likes if pid == post_id)
-    return len(likes)
+# def get_likes_count(post_id: int) -> int:
+#     """
+#     Get total likes count.
+#     - If post_id provided → likes on that post.
+#     - If user_id provided → likes given by that user.
+#     """
+#     likes = load_pickle(LIKES_DB)
+#     if post_id:
+#         return sum(1 for (_, pid) in likes if pid == post_id)
+#     return len(likes)
 
 
-def get_comments_count(post_id: int) -> int:
-    """
-    Get total comments count.
-    - If post_id provided → comments on that post.
-    - If user_id provided → comments made by that user.
-    """
-    comments = load_pickle(COMMENTS_DB)
-    if post_id:
-        return sum(1 for c in comments if getattr(c, "post_id", None) == post_id)
-    return len(comments)
+# def get_comments_count(post_id: int) -> int:
+#     """
+#     Get total comments count.
+#     - If post_id provided → comments on that post.
+#     - If user_id provided → comments made by that user.
+#     """
+#     comments = load_pickle(COMMENTS_DB)
+#     if post_id:
+#         return sum(1 for c in comments if getattr(c, "post_id", None) == post_id)
+#     return len(comments)
 
 
 def increment_comments_count_of_post(post_id: int) -> bool:
@@ -331,3 +310,33 @@ def load_recent_posts(limit: int = 20) -> list[PostSchema]:
 
     # Apply limit
     return posts[:limit]
+
+
+def increment_likes_count_of_post(post_id: int) -> bool:
+    """
+    Increment the likes count for a specific post.
+    Returns True if successful, False if post not found.
+    """
+    posts = load_pickle(POSTS_DB)
+    for p in posts:
+        if p.post_id == post_id:
+            p.likes_nbr += 1
+            save_pickle(POSTS_DB, posts)
+            return True
+    return False
+
+
+def decrement_likes_count_of_post(post_id: int) -> bool:
+    """
+    Decrement the likes count for a specific post.
+    Ensures the count doesn't go below zero.
+    Returns True if successful, False if post not found.
+    """
+    posts = load_pickle(POSTS_DB)
+    for p in posts:
+        if p.post_id == post_id:
+            if p.likes_nbr > 0:
+                p.likes_nbr -= 1
+            save_pickle(POSTS_DB, posts)
+            return True
+    return False
