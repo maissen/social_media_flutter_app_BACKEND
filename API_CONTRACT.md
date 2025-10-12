@@ -703,40 +703,6 @@ Development: http://localhost:8000/v1
 ```
 ---
 
-## 6. Media Upload
-
-### 6.1 Upload profile picture
-**POST** `/upload/image`
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: multipart/form-data`
-
-**Request Body (Form Data):**
-- `file`: Image file (JPEG, PNG, max 5MB)
-
-**Response:** `201 Created`
-```json
-{
-  "success": true,
-  "data": {
-    "profile_picture_url": "https://storage.com/images/v4_thumb.jpg",
-  },
-  "message": "Image uploaded successfully",
-  "timestamp": "2025-10-06T10:30:00Z"
-}
-```
-
-**Response:** `error`
-```json
-  {
-    "success": false,
-    "message": "Failed ",
-    "timestamp": "2025-10-06T10:30:00Z"
-  }
-```
----
-
 ### 5.4 User's feed
 **GET** `feed/`
 
