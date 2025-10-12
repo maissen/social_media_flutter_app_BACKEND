@@ -2,12 +2,12 @@ import pickle
 from typing import List, Optional
 from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
 
-DB_FILE = "database/users_database.dat"
+USERS_DB_FILE = "database/users_database.dat"
 
 def load_users() -> list[UserSchema]:
     """Load users from the file."""
     try:
-        with open(DB_FILE, "rb") as f:
+        with open(USERS_DB_FILE, "rb") as f:
             return pickle.load(f)
     except (FileNotFoundError, EOFError):
         return []
@@ -17,7 +17,7 @@ def generate_new_user_id():
 
 def save_users(users: list[UserSchema]):
     """Save users to the file."""
-    with open(DB_FILE, "wb") as f:
+    with open(USERS_DB_FILE, "wb") as f:
         pickle.dump(users, f)
 
 def get_user_by_email(email: str) -> Optional[UserSchema]:

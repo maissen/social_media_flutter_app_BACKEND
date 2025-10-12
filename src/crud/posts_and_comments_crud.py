@@ -2,7 +2,7 @@ import pickle
 from datetime import datetime
 from typing import List, Optional, Tuple
 from src.schemas.posts import PostSchema, CommentProfile
-from src.users_crud import get_user_by_id
+from src.users_crud import get_user_by_id, USERS_DB_FILE
 
 
 # ====================================================
@@ -38,10 +38,14 @@ def save_data_to_dat_file(file_path: str, data):
 # 🔹 Post CRUD
 # ====================================================
 
-def insert_new_post(post: PostSchema) -> PostSchema:
+def create_new_post(post: PostSchema) -> Optional[PostSchema]:
+
     posts = load_data_from_dat_file(POSTS_DB)
     post.post_id = len(posts) + 1
     posts.append(post)
+
+    increment_posts_count_of_user(user_id=post.user_id)
+
     save_data_to_dat_file(POSTS_DB, posts)
     return post
 
@@ -87,6 +91,58 @@ def update_a_post(post_id: int, payload: str) -> Optional[PostSchema]:
 
 
 # ====================================================
+# 🔹 User Post Count Utilities
+# ====================================================
+
+def increment_posts_count_of_user(user_id: int) -> bool:
+    """
+    Increment the number of posts for a given user.
+    Returns True if successful, False otherwise.
+    """
+    users = load_data_from_dat_file(USERS_DB_FILE)
+
+    user = get_user_by_id(user_id)
+    if not user:
+        return False
+
+    user.posts_count += 1
+
+    # Update user in list
+    for i, u in enumerate(users):
+        if u.user_id == user_id:
+            users[i] = user
+            break
+
+    save_data_to_dat_file(USERS_DB_FILE, users)
+    return True
+
+
+def decrement_posts_count_of_user(user_id: int) -> bool:
+    """
+    Decrement the number of posts for a given user.
+    Ensures the count does not go below zero.
+    Returns True if successful, False otherwise.
+    """
+    users = load_data_from_dat_file(USERS_DB_FILE)
+
+    user = get_user_by_id(user_id)
+    if not user:
+        return False
+
+    if user.posts_count > 0:
+        user.posts_count -= 1
+
+    # Update user in list
+    for i, u in enumerate(users):
+        if u.user_id == user_id:
+            users[i] = user
+            break
+
+    save_data_to_dat_file(USERS_DB_FILE, users)
+    return True
+
+
+# ====================================================
 # 🔹 Likes Management (Posts)
 # ====================================================
 
@@ -109,13 +165,16 @@ def like_post(user_id: int, post_id: int) -> bool:
 
 
 def dislike_post(user_id: int, post_id: int) -> bool:
-    likes = load_data_from_dat_file(LIKES_DB)
+
     if (user_id, post_id) not in likes:
         return False
+    
+    likes = load_data_from_dat_file(LIKES_DB)
     likes.remove((user_id, post_id))
     save_data_to_dat_file(LIKES_DB, likes)
-    if decrement_likes_count_of_post(post_id=post_id):
-        return True
+    
+    decrement_likes_count_of_post(post_id=post_id)
+    return True
 
 
 # ====================================================
@@ -123,40 +182,50 @@ def dislike_post(user_id: int, post_id: int) -> bool:
 # ====================================================
 
 def add_comment_to_post(user_id: int, post_id: int, comment_payload: str) -> Optional[CommentProfile]:
-    posts = load_data_from_dat_file(POSTS_DB)
+
     if not get_post_by_id(post_id):
         return None
+    
     user = get_user_by_id(user_id)
     if not user:
         return None
+    
     comments = load_data_from_dat_file(COMMENTS_DB)
     new_comment = CommentProfile(
         comment_id=len(comments) + 1,
+        post_id=post_id,
         user_id=user_id,
         username=user.username,
         profile_picture=user.profile_picture,
         comment_payload=comment_payload,
         created_at=datetime.utcnow()
     )
+    
     comments.append(new_comment)
     save_data_to_dat_file(COMMENTS_DB, comments)
-    if increment_comments_count_of_post(post_id):
-        return new_comment
+    
+    increment_comments_count_of_post(post_id)
+    return new_comment
+
 
 
 def remove_comment_from_post(comment_id: int, post_id: int) -> bool:
+
     comments = load_data_from_dat_file(COMMENTS_DB)
-    target_comment = next((c for c in comments if c.comment_id == comment_id), None)
+    target_comment = get_comment_by_id(comment_id=comment_id)
+
     if not target_comment:
         return False
+    
     comments = [c for c in comments if c.comment_id != comment_id]
     save_data_to_dat_file(COMMENTS_DB, comments)
-    if not decrement_comments_count_of_post(post_id):
-        return False
+
+    decrement_comments_count_of_post(post_id)
     return True
 
 
-def get_comments_for_post(post_id: int) -> List[CommentProfile]:
+
+def get_comments_of_post(post_id: int) -> List[CommentProfile]:
     comments = load_data_from_dat_file(COMMENTS_DB)
     return [c for c in comments if getattr(c, "post_id", None) == post_id]
 
@@ -164,11 +233,6 @@ def get_comments_for_post(post_id: int) -> List[CommentProfile]:
 # ====================================================
 # 🔹 Count Utilities (Posts)
 # ====================================================
-
-def get_posts_count() -> int:
-    posts = load_data_from_dat_file(POSTS_DB)
-    return len(posts)
-
 
 def increment_comments_count_of_post(post_id: int) -> bool:
     posts = load_data_from_dat_file(POSTS_DB)

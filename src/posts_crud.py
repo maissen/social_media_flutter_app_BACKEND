@@ -31,7 +31,7 @@ def save_pickle(file_path: str, data):
 # 🔹 Post CRUD
 # ====================================================
 
-def insert_new_post(post: PostSchema) -> PostSchema:
+def create_new_post(post: PostSchema) -> PostSchema:
     """Insert a new post into the database."""
     posts = load_pickle(POSTS_DB)
     post.post_id = len(posts) + 1
@@ -171,7 +171,7 @@ def remove_comment_from_post(comment_id: int, post_id: int) -> bool:
     return True
 
 
-def get_comments_for_post(post_id: int) -> List[CommentProfile]:
+def get_comments_of_post(post_id: int) -> List[CommentProfile]:
     """Get all comments belonging to a specific post."""
     comments = load_pickle(COMMENTS_DB)
     return [c for c in comments if getattr(c, "post_id", None) == post_id]
