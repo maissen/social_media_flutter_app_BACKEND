@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from src.crud.posts_and_comments_crud import load_feed_of_user, load_recent_posts
 from src.schemas.generic_response import GenericResponse
@@ -8,29 +10,30 @@ router = APIRouter(prefix="", tags=["Profile Management"])
 
 
 @router.get("", response_model=GenericResponse, status_code=status.HTTP_200_OK)
-async def get_user_feed(
-    current_user=Depends(get_current_user_from_token)
-):
-    
+async def get_user_feed(current_user=Depends(get_current_user_from_token)):
     try:
-
         feed = load_feed_of_user(user_id=current_user.user_id)
 
-        return GenericResponse(
-            success=True,
-            data=feed,
-            message=f"Feed is fetched successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=feed,
+                message="Feed is fetched successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            message=f"An error occured while loading your feed",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An error occurred while loading your feed",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
 
 
 @router.get("/explore", response_model=GenericResponse, status_code=status.HTTP_200_OK)
@@ -43,17 +46,24 @@ async def get_explore_feed(
     """
     try:
         posts = load_recent_posts(limit=limit)
-        return GenericResponse(
-            success=True,
-            data=posts,
-            message="Explore feed loaded successfully",
-            timestamp=datetime.utcnow()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=posts,
+                message="Explore feed loaded successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
+
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            message="An error occurred while loading the explore feed",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An error occurred while loading the explore feed",
+                timestamp=datetime.utcnow()
+            ))
         )
