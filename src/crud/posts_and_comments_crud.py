@@ -52,30 +52,38 @@ def get_post_by_id(post_id: int) -> Optional[PostSchema]:
 
 
 def get_posts_of_user(current_user_id: int, target_user_id: int) -> List[PostSchema]:
+
     posts = load_data_from_dat_file(POSTS_DB)
     user_posts = [p for p in posts if p.user_id == target_user_id]
+    
     for post in user_posts:
         post.is_liked_by_me = is_post_liked_by_me(current_user_id, post.post_id)
     return user_posts
 
 
 def delete_a_post(post_id: int) -> bool:
+
     posts = load_data_from_dat_file(POSTS_DB)
     new_posts = [p for p in posts if p.post_id != post_id]
+
     if len(new_posts) == len(posts):
         return False
+    
     save_data_to_dat_file(POSTS_DB, new_posts)
     return True
 
 
 def update_a_post(post_id: int, payload: str) -> Optional[PostSchema]:
+
     posts = load_data_from_dat_file(POSTS_DB)
-    for p in posts:
-        if p.post_id == post_id:
-            p.content = payload
-            save_data_to_dat_file(POSTS_DB, posts)
-            return p
-    return None
+
+    post = get_post_by_id(post_id)
+    if not post:
+        return None
+    
+    post.content = payload
+    save_data_to_dat_file(POSTS_DB, posts)
+    return post
 
 
 # ====================================================
