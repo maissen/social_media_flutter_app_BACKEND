@@ -35,6 +35,28 @@ def get_user_by_id(user_id: int) -> Optional[UserSchema]:
     users = load_users()
     return next((user for user in users if user.user_id == user_id), None)
 
+from src.schemas.users import UserSchema, UserProfileSimplified
+from typing import Optional
+
+def get_simplified_user_obj_by_id(user_id: int) -> Optional[UserProfileSimplified]:
+    """
+    Retrieve a simplified user profile by user_id.
+    Returns UserProfileSimplified or None if user not found.
+    """
+    user: UserSchema = get_user_by_id(user_id)
+    if not user:
+        return None
+
+    simplified_user = UserProfileSimplified(
+        user_id=user.user_id,
+        email=user.email,
+        username=user.username,
+        profile_picture=user.profile_picture,
+        is_following=user.is_following
+    )
+    return simplified_user
+
+
 def insert_new_user(user: UserSchema):
     """Insert a new user into the file-based database."""
     users = load_users()
