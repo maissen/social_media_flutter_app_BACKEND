@@ -632,9 +632,16 @@ Development: http://localhost:8000/v1
 {
   "success": true,
   "data": {
-    "is_liked": true,
-    "likes_nbr": 15
-  },
+      "comment_id": 2,
+      "post_id": 1,
+      "user_id": 5,
+      "username": "janedoe",
+      "profile_picture": "https://storage.com/profile2.jpg",
+      "comment_payload": "Nice post!",
+      "created_at": "2025-10-06T10:32:00Z",
+      "likes_nbr": 2,
+      "is_liked_by_me": true
+    },
   "message": "Comment liked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -693,20 +700,18 @@ Development: http://localhost:8000/v1
 ```json
 {
   "success": true,
-  {
-    "post_id": "v10",
-    "author": {
-      "user_id": "v5",
-      "username": "janedoe",
-      "profile_picture": "https://storage.com/profile.jpg"
-    },
-    "content": "Just got a new job!",
-    "media_url": "https://storage.com/image1.jpg",
-    "likes_count": 120,
-    "comments_count": 18,
-    "is_liked": false,
-    "created_at": "2025-10-06T09:00:00Z"
-  },
+  "data": [
+    {
+      "post_id": 7,
+      "user_id": 1,
+      "content": "This is my post content",
+      "media_url": "",
+      "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 42,
+      "comments_nbr": 15,
+      "is_liked_by_me": false,
+    }
+  ],
   "message": "Comment liked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -722,20 +727,28 @@ Development: http://localhost:8000/v1
 ```json
 {
   "success": true,
-  {
-    "post_id": "v10",
-    "author": {
-      "user_id": "v5",
-      "username": "janedoe",
-      "profile_picture": "https://storage.com/profile.jpg"
+  "data" : [
+    {
+      "post_id": 7,
+      "user_id": 1,
+      "content": "This is my post content",
+      "media_url": "https://storage.com/image1.jpg",
+      "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 42,
+      "comments_nbr": 15,
+      "is_liked_by_me": false,
     },
-    "content": "Just got a new job!",
-    "media_url": "https://storage.com/image1.jpg",
-    "likes_count": 120,
-    "comments_count": 18,
-    "is_liked": false,
-    "created_at": "2025-10-06T09:00:00Z"
-  },
+    {
+      "post_id": 7,
+      "user_id": 1,
+      "content": "This is my post content",
+      "media_url": "https://storage.com/image1.jpg",
+      "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 42,
+      "comments_nbr": 15,
+      "is_liked_by_me": false,
+    }
+  ],
   "message": "Comment liked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
