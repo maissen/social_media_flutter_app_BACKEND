@@ -617,30 +617,117 @@ function viewMyProfile() {
 async function showProfileModal(profile) {
     currentProfileUserId = profile.user_id;
 
-    document.getElementById('profileModalUsername').textContent = profile.username;
-    document.getElementById('profileModalAvatar').src = profile.profile_picture || 'https://via.placeholder.com/100';
-    document.getElementById('profileModalName').textContent = profile.username;
-    document.getElementById('profileModalEmail').textContent = profile.email;
-    document.getElementById('profileModalBio').textContent = profile.bio || 'No bio yet';
-    document.getElementById('profileModalPosts').textContent = profile.posts_count || 0;
-    document.getElementById('profileModalFollowers').textContent = profile.followers_count || 0;
-    document.getElementById('profileModalFollowing').textContent = profile.following_count || 0;
+    // Safely set textContent or src if element exists
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
+
+    const setSrc = (id, src) => {
+        const el = document.getElementById(id);
+        if (el) el.src = src;
+    };
+
+    setText('profileModalUsername', profile.username);
+    setSrc('profileModalAvatar', profile.profile_picture || 'https://via.placeholder.com/100');
+    setText('profileModalName', profile.username);
+    setText('profileModalEmail', profile.email);
+    setText('profileModalBio', profile.bio || 'No bio yet');
+    setText('profileModalPosts', profile.posts_count || 0);
+    setText('profileModalFollowers', profile.followers_count || 0);
+    setText('profileModalFollowing', profile.following_count || 0);
 
     const actionsDiv = document.getElementById('profileModalActions');
-    actionsDiv.innerHTML = '';
+    const editSection = document.getElementById('profileEditSection');
+    if (actionsDiv) actionsDiv.innerHTML = '';
 
-    if (profile.user_id != currentUserData.user_id) {
-        const followBtn = document.createElement('button');
-        followBtn.className = `btn-follow ${profile.is_following ? 'following' : ''}`;
-        followBtn.textContent = profile.is_following ? 'Unfollow' : 'Follow';
-        followBtn.onclick = () => toggleFollow(profile.user_id, followBtn);
-        actionsDiv.appendChild(followBtn);
+    if (profile.user_id === currentUserData.user_id) {
+        // Show edit section for current user
+        if (editSection) editSection.style.display = 'block';
+        const bioInput = document.getElementById('profileBioInput');
+        if (bioInput) bioInput.value = profile.bio || '';
+
+        // Button to update bio
+        const updateBioBtn = document.getElementById('updateBioBtn');
+        if (updateBioBtn) {
+            updateBioBtn.onclick = async () => {
+                const newBio = bioInput.value.trim();
+                if (!newBio) return alert('Bio cannot be empty');
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/users/update/bio`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ new_bio: newBio })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setText('profileModalBio', data.data.new_bio);
+                        currentUserData.bio = data.data.new_bio;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUserData));
+                        alert('Bio updated successfully');
+                    } else {
+                        alert(data.message || 'Failed to update bio');
+                    }
+                } catch (err) {
+                    alert('Network error. Try again.');
+                    console.error(err);
+                }
+            };
+        }
+
+        // Button to update profile picture
+        const profilePicInput = document.getElementById('profilePicInput');
+        const updatePicBtn = document.getElementById('updateProfilePicBtn');
+        if (updatePicBtn && profilePicInput) {
+            updatePicBtn.onclick = async () => {
+                const file = profilePicInput.files[0];
+                if (!file) return alert('Select a picture first');
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/users/update-profile-picture`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${authToken}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setSrc('profileModalAvatar', data.data.file_url);
+                        currentUserData.profile_picture = data.data.file_url;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUserData));
+                        alert('Profile picture updated successfully');
+                    } else {
+                        alert(data.message || 'Failed to update picture');
+                    }
+                } catch (err) {
+                    alert('Network error. Try again.');
+                    console.error(err);
+                }
+            };
+        }
+
+    } else {
+        // Other users: hide edit section, show follow button
+        if (editSection) editSection.style.display = 'none';
+        if (actionsDiv) {
+            const followBtn = document.createElement('button');
+            followBtn.className = `btn-follow ${profile.is_following ? 'following' : ''}`;
+            followBtn.textContent = profile.is_following ? 'Unfollow' : 'Follow';
+            followBtn.onclick = () => toggleFollow(profile.user_id, followBtn);
+            actionsDiv.appendChild(followBtn);
+        }
     }
 
     await loadUserPosts(profile.user_id);
 
-    document.getElementById('profileModal').classList.add('active');
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) profileModal.classList.add('active');
 }
+
+
 
 function closeProfileModal() {
     document.getElementById('profileModal').classList.remove('active');
@@ -844,3 +931,149 @@ async function viewCommentLikes(commentId) {
 function closeLikesModal() {
     document.getElementById('likesModal').classList.remove('active');
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function updateProfileBio() {
+    const newBio = document.getElementById('profileBioInput').value.trim();
+    if (!newBio) {
+        alert('Bio cannot be empty');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update/bio`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ new_bio: newBio })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            alert('Bio updated successfully!');
+            document.getElementById('profileModalBio').textContent = data.data.new_bio;
+            currentUserData.bio = data.data.new_bio;
+            localStorage.setItem('currentUser', JSON.stringify(currentUserData));
+            loadUserProfile();
+        } else {
+            alert(data.message || 'Failed to update bio');
+        }
+    } catch (error) {
+        console.error('Error updating bio:', error);
+        alert('Network error. Please try again.');
+    }
+}
+
+
+
+async function updateProfilePicture() {
+    const fileInput = document.getElementById('profilePictureInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Please select an image file.');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-picture`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            alert('Profile picture updated successfully!');
+            document.getElementById('profileModalAvatar').src = data.data.file_url;
+            document.getElementById('navAvatar').src = data.data.file_url;
+            currentUserData.profile_picture = data.data.file_url;
+            localStorage.setItem('currentUser', JSON.stringify(currentUserData));
+            loadUserProfile();
+        } else {
+            alert(data.message || 'Failed to update profile picture');
+        }
+    } catch (error) {
+        console.error('Error updating profile picture:', error);
+        alert('Network error. Please try again.');
+    }
+}
+
+

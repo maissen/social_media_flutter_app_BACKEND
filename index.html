@@ -831,41 +831,60 @@
         </div>
     </div>
 
-    <div class="modal" id="profileModal">
+    <div id="profileModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="profileModalUsername">Profile</h2>
-                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            <span class="close" onclick="closeProfileModal()">&times;</span>
+
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <img id="profileModalAvatar" src="https://via.placeholder.com/100" alt="Profile Picture" class="profile-avatar">
+                <div class="profile-header-info">
+                    <h2 id="profileModalUsername">Username</h2>
+                    <p id="profileModalEmail">email@example.com</p>
+                </div>
             </div>
-            <div class="modal-body">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img id="profileModalAvatar" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-                    <h3 id="profileModalName" style="margin-top: 10px;"></h3>
-                    <p id="profileModalEmail" style="color: #65676b; font-size: 14px;"></p>
-                    <p id="profileModalBio" style="color: #050505; margin-top: 10px;"></p>
+
+            <!-- Edit Section (only for current user) -->
+            <div id="profileEditSection" style="margin: 20px 0; display: none;">
+                <h4>Edit Profile</h4>
+
+                <!-- Bio Update -->
+                <div style="margin-bottom: 12px;">
+                    <input type="text" id="profileBioInput" placeholder="Update your bio" style="width: 70%; padding: 6px;">
+                    <button class="btn-primary" style="padding: 6px 12px; font-size: 13px;" onclick="updateProfileBio()">Update Bio</button>
                 </div>
-                <div class="profile-stats" style="margin-bottom: 20px;">
-                    <div class="stat">
-                        <div class="stat-value" id="profileModalPosts">0</div>
-                        <div class="stat-label">Posts</div>
-                    </div>
-                    <div class="stat" style="cursor: pointer;" onclick="viewFollowers()">
-                        <div class="stat-value" id="profileModalFollowers">0</div>
-                        <div class="stat-label">Followers</div>
-                    </div>
-                    <div class="stat" style="cursor: pointer;" onclick="viewFollowing()">
-                        <div class="stat-value" id="profileModalFollowing">0</div>
-                        <div class="stat-label">Following</div>
-                    </div>
+
+                <!-- Profile Picture Update -->
+                <div>
+                    <input type="file" id="profilePictureInput" accept="image/*" style="margin-bottom: 8px;">
+                    <button class="btn-primary" style="padding: 6px 12px; font-size: 13px;" onclick="updateProfilePicture()">Update Picture</button>
                 </div>
-                <div id="profileModalActions" style="margin-bottom: 20px;"></div>
-                <div id="profileModalPosts">
-                    <h3 style="margin-bottom: 15px;">Posts</h3>
-                    <div id="profilePostsList"></div>
-                </div>
+            </div>
+
+            <!-- Bio Display -->
+            <div class="profile-bio">
+                <p id="profileModalBio">No bio yet</p>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+                <div><strong id="profileModalPosts">0</strong> Posts</div>
+                <div><strong id="profileModalFollowers">0</strong> Followers</div>
+                <div><strong id="profileModalFollowing">0</strong> Following</div>
+            </div>
+
+            <!-- Profile Actions -->
+            <div id="profileModalActions" style="margin: 12px 0;">
+                <!-- Follow / Unfollow button injected dynamically -->
+            </div>
+
+            <!-- User Posts List -->
+            <div id="profilePostsList" class="profile-posts">
+                <div class="loading">Loading posts...</div>
             </div>
         </div>
     </div>
+
 
     <div class="modal" id="searchResultsModal">
         <div class="modal-content">
