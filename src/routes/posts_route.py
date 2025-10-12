@@ -42,7 +42,7 @@ async def create_post(
             )
 
         # Determine post_id before saving file
-        post_id = get_posts_count() + 1
+        post_id = get_posts_count(user_id=current_user.user_id) + 1
 
         media_url = ""
         if media_file:

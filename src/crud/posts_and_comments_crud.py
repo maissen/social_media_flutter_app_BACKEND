@@ -173,10 +173,10 @@ def like_post(user_id: int, post_id: int) -> bool:
 
 def dislike_post(user_id: int, post_id: int) -> bool:
 
+    likes = load_data_from_dat_file(LIKES_DB)
     if (user_id, post_id) not in likes:
         return False
     
-    likes = load_data_from_dat_file(LIKES_DB)
     likes.remove((user_id, post_id))
 
     save_data_to_dat_file(LIKES_DB, likes)
