@@ -793,7 +793,7 @@ async function viewPostLikes(postId) {
     modal.classList.add('active');
 
     try {
-        const response = await fetch(`${API_BASE_URL}/posts/${postId}/likes`, {
+        const response = await fetch(`${API_BASE_URL}/posts/likes?post_id=${parseInt(postId)}`, {
             headers: getAuthHeaders()
         });
 

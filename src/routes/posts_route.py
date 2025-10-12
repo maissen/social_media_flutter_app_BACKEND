@@ -98,6 +98,52 @@ async def create_post(
 
 
 
+@router.get("/likes", response_model=GenericResponse)
+def get_likes_of_post(
+    post_id: int = Query(..., description="ID of the post to retrieve likes for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Retrieve all users who liked a specific post.
+    Requires authentication.
+    """
+    try:
+        post = get_post_by_id(post_id)
+        if not post:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Post not found",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        liked_users = get_all_likes_of_post(post_id, current_user.user_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=liked_users,
+                message=f"{len(liked_users)} users liked this post",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+    except Exception as e:
+        print("Error retrieving likes of post:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="Failed to retrieve likes of post",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+
+
 @router.get("/{user_id}", response_model=GenericResponse)
 def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_token)):
     """
@@ -345,52 +391,6 @@ def like_or_dislike_post(
             detail=jsonable_encoder(GenericResponse(
                 success=False,
                 message="Failed",
-                timestamp=datetime.utcnow()
-            ))
-        )
-
-
-
-@router.get("/likes", response_model=GenericResponse)
-def get_likes_of_post(
-    post_id: int = Query(..., description="ID of the post to retrieve likes for"),
-    current_user=Depends(get_current_user_from_token)
-):
-    """
-    Retrieve all users who liked a specific post.
-    Requires authentication.
-    """
-    try:
-        post = get_post_by_id(post_id)
-        if not post:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content=jsonable_encoder(GenericResponse(
-                    success=False,
-                    message="Post not found",
-                    timestamp=datetime.utcnow()
-                ))
-            )
-
-        liked_users = get_all_likes_of_post(post_id, current_user.user_id)
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=jsonable_encoder(GenericResponse(
-                success=True,
-                data=liked_users,
-                message=f"{len(liked_users)} users liked this post",
-                timestamp=datetime.utcnow()
-            ))
-        )
-
-    except Exception as e:
-        print("Error retrieving likes of post:", e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=jsonable_encoder(GenericResponse(
-                success=False,
-                message="Failed to retrieve likes of post",
                 timestamp=datetime.utcnow()
             ))
         )
