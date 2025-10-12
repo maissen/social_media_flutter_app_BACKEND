@@ -45,7 +45,7 @@ async def get_user_feed(current_user=Depends(get_current_user_from_token)):
 
 @router.get("/explore", response_model=GenericResponse, status_code=status.HTTP_200_OK)
 async def get_explore_feed(
-    limit: int = 20,
+    limit: int = 100,
     current_user=Depends(get_current_user_from_token)
 ):
     """
@@ -53,6 +53,13 @@ async def get_explore_feed(
     """
     try:
         posts = load_recent_posts(limit=limit)
+
+        #? attach user object with each post
+        for item in posts:
+            post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
+
+            if post_owner is not None:
+                item.user = post_owner
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

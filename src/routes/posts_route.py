@@ -158,6 +158,15 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
     try:
         posts = get_posts_of_user(current_user_id=current_user.user_id, target_user_id=user_id)
 
+
+        #? attach user object with each post
+        for item in posts:
+            post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
+
+            if post_owner is not None:
+                item.user = post_owner
+
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder(GenericResponse(

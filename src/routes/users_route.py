@@ -14,7 +14,7 @@ from src.schemas.users import UpdateBioRequest, UserProfileSchema
 
 router = APIRouter(prefix="", tags=["User Management"])
 UPLOAD_DIR = "uploads/profile_pictures"
-UPLOAD_FILE_PREFIX = "url"
+UPLOAD_FILE_PREFIX = os.getenv("UPLOAD_FILES_PREFIX")
 
 @router.get("/profile/{user_id}", response_model=GenericResponse)
 def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_token)):
@@ -136,7 +136,7 @@ async def update_profile_picture(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"
+        file_url = f"{UPLOAD_FILE_PREFIX}{file_path}"
 
         update_user_profile_picture(file=file_url, user_id=current_user.user_id)
 

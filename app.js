@@ -238,8 +238,8 @@ function createPostCard(post) {
     card.className = 'post-card';
     card.dataset.postId = post.post_id;
 
-    const authorName = 'Unknown';
-    const authorAvatar = "post" || 'https://via.placeholder.com/40';
+    const authorName = post.user.username;
+    const authorAvatar = post.user.profile_picture || 'https://via.placeholder.com/40';
     const postTime = formatTime(post.created_at);
     const isLiked = post.is_liked_by_me || false;
     const likesCount = post.likes_nbr || 0;
