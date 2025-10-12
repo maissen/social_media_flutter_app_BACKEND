@@ -286,7 +286,7 @@ def create_new_comment(
     The post_id is provided as a query parameter.
     """
     try:
-        comment = add_comment_to_post(current_user, post_id, content.content)
+        comment = add_comment_to_post(current_user.user_id, post_id, content.content)
 
         if comment is not None:
             return GenericResponse(

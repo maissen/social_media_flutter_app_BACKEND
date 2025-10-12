@@ -206,8 +206,12 @@ def add_comment_to_post(user_id: int, post_id: int, comment_payload: str) -> Opt
         username=user.username,
         profile_picture=user.profile_picture,
         comment_payload=comment_payload,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
+        likes_nbr=0,
+        is_liked_by_me=False
     )
+
+    print(f"the actual comment is : {new_comment.comment_payload}")
     
     comments.append(new_comment)
     save_data_to_dat_file(COMMENTS_DB, comments)
