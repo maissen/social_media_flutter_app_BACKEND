@@ -285,10 +285,13 @@ def like_or_dislike_post(
     try:
         post = get_post_by_id(post_id)
         if not post:
-            return GenericResponse(
-                success=False,
-                message="Post not found",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Post not found",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         user_id = current_user.user_id
@@ -303,36 +306,49 @@ def like_or_dislike_post(
             is_liked = True
 
         if not success:
-            return GenericResponse(
-                success=False,
-                message="Failed to like/dislike post",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to like/dislike post",
+                    timestamp=datetime.utcnow()
+                ))
             )
-        
+
         post.is_liked_by_me = is_liked
-            
+
         if is_liked:
-            return GenericResponse(
-                success=True,
-                data=post,
-                message="Post is liked successfully",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=jsonable_encoder(GenericResponse(
+                    success=True,
+                    data=post,
+                    message="Post is liked successfully",
+                    timestamp=datetime.utcnow()
+                ))
             )
         else:
-            return GenericResponse(
-                success=True,
-                data={"is_liked": is_liked},
-                message="Post is desliked successfully",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=jsonable_encoder(GenericResponse(
+                    success=True,
+                    data={"is_liked": is_liked},
+                    message="Post is desliked successfully",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
     except Exception as e:
-        print(e)
-        return GenericResponse(
-            success=False,
-            message="Failed",
-            timestamp=datetime.utcnow()
+        print("Error in like/dislike post:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="Failed",
+                timestamp=datetime.utcnow()
+            ))
         )
+
     
 
 
@@ -350,27 +366,37 @@ def create_new_comment(
         comment = add_comment_to_post(current_user.user_id, post_id, content.content)
 
         if comment is not None:
-            return GenericResponse(
-                success=True,
-                data=comment,
-                message="Comment created successfully",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED,
+                content=jsonable_encoder(GenericResponse(
+                    success=True,
+                    data=comment,
+                    message="Comment created successfully",
+                    timestamp=datetime.utcnow()
+                ))
             )
         else:
-            return GenericResponse(
-                success=False,
-                message="Failed to create comment",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to create comment",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
     except Exception as e:
         print(f"Error creating comment: {e}")
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to create comment",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to create comment",
+                timestamp=datetime.utcnow()
+            ))
         )
+
     
 
 @router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_200_OK)
@@ -381,31 +407,53 @@ def delete_comment(
 ):
     """
     Delete a specific comment of a post.
-    Only the comment owner or an admin should be allowed to delete (if implemented).
+    Only the comment owner or the post owner should be allowed to delete.
     """
     try:
-        success = remove_comment_from_post(comment_id, post_id)
+        comment: CommentProfile = get_comment_by_id(comment_id)
+        post = get_post_by_id(post_id)
 
-        if not success:
-            return GenericResponse(
-                success=False,
-                message="Comment not found or could not be deleted",
-                timestamp=datetime.utcnow()
+        if comment.user_id not in [current_user.user_id, post.user_id]:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to remove this comment",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
-        return GenericResponse(
-            success=True,
-            message="Comment deleted successfully",
-            timestamp=datetime.utcnow()
+        success = remove_comment_from_post(comment_id, post_id)
+        if not success:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Comment not found or could not be deleted",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                message="Comment deleted successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(f"Error deleting comment: {e}")
-        return GenericResponse(
-            success=False,
-            message="An unexpected error occurred while deleting the comment",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An unexpected error occurred while deleting the comment",
+                timestamp=datetime.utcnow()
+            ))
         )
+
     
 
 @router.post("/comments/like-dislike", response_model=GenericResponse)
