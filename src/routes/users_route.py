@@ -175,25 +175,20 @@ def search_users(
     Returns users whose username contains the search username (case-insensitive).
     """
     try:
-        # Search for users with matching username (case-insensitive)
         matching_users = find_matching_username(current_user=current_user.user_id, username=username)
         
-        if not matching_users or matching_users == []:
-            return GenericResponse(
-                success=True,
-                message="No users found",
-                timestamp=datetime.utcnow()
+        if not matching_users:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=jsonable_encoder(GenericResponse(
+                    success=True,
+                    message="No users found",
+                    timestamp=datetime.utcnow()
+                ))
             )
         
-        # Format the results
-        results = []
-        for user in matching_users:
-            results.append(get_user_by_id(user.user_id))
-        
-        # Convert to UserProfileSchema and set `is_following`
-        results = []
-        for user in matching_users:
-            results.append(UserProfileSchema(
+        results = [
+            UserProfileSchema(
                 user_id=user.user_id,
                 email=user.email,
                 username=user.username,
@@ -204,76 +199,92 @@ def search_users(
                 posts_count=user.posts_count,
                 created_at=user.created_at,
                 is_following=user.is_following
-            ))
+            ) for user in matching_users
+        ]
         
-        return GenericResponse(
-            success=True,
-            data=results,
-            message="Users retrieved successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=results,
+                message="Users retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
     
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
+
 
 @router.post("/follow-unfollow", response_model=GenericResponse)
 def follow_unfollow(
-    target_user_id: int,  # Query parameter
+    target_user_id: int,
     current_user=Depends(get_current_user_from_token)
 ):
     """
     Toggle following/unfollowing a target user.
-    If already following, it will unfollow; otherwise, it will follow.
     """
     try:
         if current_user.user_id == target_user_id:
-            return GenericResponse(
-                success=False,
-                message="You cannot follow/unfollow yourself",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You cannot follow/unfollow yourself",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         if check_following_status(current_user.user_id, target_user_id):
-            # Already following → unfollow
             success = unfollow(current_user.user_id, target_user_id)
             action = "unfollowed"
         else:
-            # Not following → follow
             success = follow(current_user.user_id, target_user_id)
             action = "followed"
 
         if not success:
-            return GenericResponse(
-                success=False,
-                message="Failed to update follow status",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to update follow status",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
-        return GenericResponse(
-            success=True,
-            data={
-                "is_following": check_following_status(current_user.user_id, target_user_id)
-            },
-            message=f"User {action} successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data={
+                    "is_following": check_following_status(current_user.user_id, target_user_id)
+                },
+                message=f"User {action} successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="An unexpected error occurred",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="An unexpected error occurred",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
+
 
 @router.get("/followers", response_model=GenericResponse)
 def get_followers(
@@ -282,27 +293,32 @@ def get_followers(
 ):
     """
     Get all users who are following the given user.
-    Requires a valid JWT token.
     """
     try:
-        followers_data: List = get_followers_of_user(user_id)
+        followers_data = get_followers_of_user(user_id)
 
-        return GenericResponse(
-            success=True,
-            data=followers_data,
-            message="Followers retrieved successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=followers_data,
+                message="Followers retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="An unexpected error occurred",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="An unexpected error occurred",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
+
 
 @router.get("/followings", response_model=GenericResponse)
 def get_followings(
@@ -311,23 +327,28 @@ def get_followings(
 ):
     """
     Get all users that the given user is following.
-    Requires a valid JWT token.
     """
     try:
-        followings: List = get_followings_of_user(user_id)
+        followings_data = get_followings_of_user(user_id)
 
-        return GenericResponse(
-            success=True,
-            data=followings,
-            message="Followings retrieved successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=followings_data,
+                message="Followings retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to fetch followings list",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to fetch followings list",
+                timestamp=datetime.utcnow()
+            ))
         )
