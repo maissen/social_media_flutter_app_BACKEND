@@ -16,7 +16,6 @@ async def get_user_feed(
     try:
 
         feed = load_feed_of_user(user_id=current_user.user_id)
-        print(f"feed length {len(feed)}")
 
         return GenericResponse(
             success=True,
