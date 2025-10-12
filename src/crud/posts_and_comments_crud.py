@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Tuple
 from src.schemas.posts import PostSchema, CommentProfile
 from src.crud.users_crud import get_user_by_id, USERS_DB_FILE
+from src.crud.users_crud import check_following_status
 
 
 # ====================================================
@@ -157,13 +158,37 @@ def is_post_liked_by_me(user_id: int, post_id: int) -> bool:
     return (user_id, post_id) in likes
 
 
-def get_all_likes_of_post(post_id: int) -> List[int]:
+# ====================================================
+# 🔹 Get All Likes of a Post
+# ====================================================
+
+from src.schemas.users import UserProfileSimplified
+from src.crud.users_crud import get_user_by_id
+
+def get_all_likes_of_post(post_id: int, current_user_id: int) -> list[UserProfileSimplified]:
     """
-    Returns a list of user IDs who liked a specific post.
+    Returns a list of simplified user profiles who liked the given post.
     """
     likes = load_data_from_dat_file(LIKES_DB)
-    post_likes = [user_id for (user_id, p_id) in likes if p_id == post_id]
-    return post_likes
+    user_ids = [user_id for user_id, liked_post_id in likes if liked_post_id == post_id]
+
+    liked_users: list[UserProfileSimplified] = []
+
+    for uid in user_ids:
+        user = get_user_by_id(uid)
+        if user:
+            liked_users.append(
+                UserProfileSimplified(
+                    user_id=user.user_id,
+                    email=user.email,
+                    username=user.username,
+                    profile_picture=user.profile_picture,
+                    is_following=check_following_status(user_1=current_user_id, user_2=uid)
+                )
+            )
+
+    return liked_users
+
 
 
 
