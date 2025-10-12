@@ -449,3 +449,12 @@ def decrement_likes_count_of_comment(comment_id: int) -> bool:
 def get_comment_by_id(comment_id: int) -> CommentProfile | None:
     comments = load_comments()
     return next((c for c in comments if c.comment_id == comment_id), None)
+
+
+def get_posts_count(user_id: int) -> int:
+    """
+    Returns the number of posts created by a given user.
+    """
+    posts = load_data_from_dat_file(POSTS_DB)
+    user_posts = [p for p in posts if p.user_id == user_id]
+    return len(user_posts)
