@@ -311,6 +311,6 @@ def get_followings(
         return GenericResponse(
             success=False,
             data=None,
-            message="An unexpected error occurred",
+            message="Failed to fetch followings list",
             timestamp=datetime.utcnow()
         )

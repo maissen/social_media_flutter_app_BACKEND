@@ -19,7 +19,6 @@ Development: http://localhost:8000/v1
   "email": "user@example.com",
   "username": "johndoe",
   "password": "SecurePass123!",
-  "date_of_birth": "2000-01-15"
 }
 ```
 
@@ -180,23 +179,22 @@ Development: http://localhost:8000/v1
 ```
 
 #### update profile picture
-**PUT** `/users/update/profile-picture`
+**PUT** `/users/update-profile-picture`
 
 **Headers:** `Authorization: Bearer <token>`
 
-**Request Body:**
-```json
-{
-  "profile_picture": "base64_encoded_image_or_url"
-}
-```
+**Request Body (multipart/form-data):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| file  | file | The image file to upload as the profile picture |
 
 **Response:** `200 OK`
 ```json
 {
   "success": true,
   "data": {
-    "profile_picture": "https://storage.com/profile.jpg"
+    "file_url": "https://storage.com/profile.jpg"
   },
   "message": "Profile picture updated successfully",
   "timestamp": "2025-10-06T10:30:00Z"
@@ -224,13 +222,20 @@ Development: http://localhost:8000/v1
 ```json
 {
   "success": true,
-  "data": {
-    "user_id": "v5",
-    "username": "Maissen",
-    "profile_picture": "https://storage.com/profile.jpg",
-    "followers_count": 150,
-    "following_count": 200,
-  },
+  "data": [
+    {
+      "user_id": "v4",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "bio": "Software developer and tech enthusiast",
+      "profile_picture": "https://storage.com/profile.jpg",
+      "followers_count": 150,
+      "following_count": 200,
+      "posts_count": 45,
+      "created_at": "2025-01-15T10:30:00Z",
+      "is_following": false
+    }
+  ],
   "message": "Users retrieved successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -282,7 +287,9 @@ Development: http://localhost:8000/v1
 **GET** `/users/followers?user_id=3`
 
 **Query Parameters:**
-- `user_id` (required): the user_id to follow/unfollow
+- `user_id` (required): the user_id to follow or unfollow
+
+**Headers:** `Authorization: Bearer <token>`
 
 **Response:** `200 OK`
 ```json
@@ -291,13 +298,15 @@ Development: http://localhost:8000/v1
   "data": [
     {
       "user_id": "v4",
-      "username": "janedoe",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "bio": "Software developer and tech enthusiast",
       "profile_picture": "https://storage.com/profile.jpg",
-    },
-    {
-      "user_id": "v4",
-      "username": "janedoe",
-      "profile_picture": "https://storage.com/profile.jpg",
+      "followers_count": 150,
+      "following_count": 200,
+      "posts_count": 45,
+      "created_at": "2025-01-15T10:30:00Z",
+      "is_following": false
     }
   ],
   "message": "Followers retrieved successfully",
@@ -321,6 +330,8 @@ Development: http://localhost:8000/v1
 **Query Parameters:**
 - `user_id` (required): the user_id to follow/unfollow
 
+**Headers:** `Authorization: Bearer <token>`
+
 **Response:** `200 OK`
 ```json
 {
@@ -328,13 +339,15 @@ Development: http://localhost:8000/v1
   "data": [
     {
       "user_id": "v4",
-      "username": "janedoe",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "bio": "Software developer and tech enthusiast",
       "profile_picture": "https://storage.com/profile.jpg",
-    },
-    {
-      "user_id": "v4",
-      "username": "janedoe",
-      "profile_picture": "https://storage.com/profile.jpg",
+      "followers_count": 150,
+      "following_count": 200,
+      "posts_count": 45,
+      "created_at": "2025-01-15T10:30:00Z",
+      "is_following": false
     }
   ],
   "message": "Following list retrieved successfully",
@@ -346,7 +359,7 @@ Development: http://localhost:8000/v1
 ```json
   {
     "success": false,
-    "message": "Failed ",
+    "message": "Failed to fetch followings list",
     "timestamp": "2025-10-06T10:30:00Z"
   }
 ```
