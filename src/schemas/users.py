@@ -44,8 +44,9 @@ class UpdateProfilePictureRequest(BaseModel):
     profile_picture: str
 
 
-class UserSearchedSchema(BaseModel):
+class UserProfileSimplified(BaseModel):
     user_id: int
     email: str
     username: str
     profile_picture: Optional[str] = ""
+    is_following: bool = False

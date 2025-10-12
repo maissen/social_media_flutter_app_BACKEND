@@ -157,6 +157,16 @@ def is_post_liked_by_me(user_id: int, post_id: int) -> bool:
     return (user_id, post_id) in likes
 
 
+def get_all_likes_of_post(post_id: int) -> List[int]:
+    """
+    Returns a list of user IDs who liked a specific post.
+    """
+    likes = load_data_from_dat_file(LIKES_DB)
+    post_likes = [user_id for (user_id, p_id) in likes if p_id == post_id]
+    return post_likes
+
+
+
 def like_post(user_id: int, post_id: int) -> bool:
 
     if is_post_liked_by_me(user_id, post_id):
