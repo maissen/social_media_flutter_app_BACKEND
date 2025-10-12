@@ -367,7 +367,7 @@ def get_comments_of_post(post_id: int, current_user_id: int) -> List[CommentProf
 # 🔹 Likes Management (Comments)
 # ====================================================
 
-def load_likes() -> List[Tuple[int, int]]:
+def load_comment_likes() -> List[Tuple[int, int]]:
     try:
         with open(LIKES_DB_FILE, "rb") as f:
             return pickle.load(f)
@@ -382,40 +382,35 @@ def save_likes(likes: List[Tuple[int, int]]):
 
 def like_comment_of_post(comment_id: int, user_id: int) -> bool:
 
-    comments = load_comments()
-    likes = load_likes()
-    
+    likes = load_comment_likes()  # or load_comment_likes() if you have that
     if (comment_id, user_id) in likes:
         return False
-    
+
     comment = get_comment_by_id(comment_id)
     if not comment:
         return False
-    
-    comment.likes_nbr += 1
-    comment.is_liked_by_me = True
+
     likes.append((comment_id, user_id))
-    save_comments(comments)
     save_likes(likes)
-    
+    increment_likes_count_of_comment(comment_id=comment_id)
     return True
 
 
 def dislike_comment_of_post(comment_id: int, user_id: int) -> bool:
-    comments = load_comments()
-    likes = load_likes()
+
+    likes = load_comment_likes()  # or load_comment_likes() if that's what you're using
     if (comment_id, user_id) not in likes:
         return False
-    comment = next((c for c in comments if c.comment_id == comment_id), None)
+
+    comment = get_comment_by_id(comment_id)
     if not comment:
         return False
-    if comment.likes_nbr > 0:
-        comment.likes_nbr -= 1
-        comment.is_liked_by_me = False
+
     likes.remove((comment_id, user_id))
-    save_comments(comments)
     save_likes(likes)
+    decrement_likes_count_of_comment(comment_id=comment_id)
     return True
+
 
 
 def get_likes_of_comment(comment_id: int) -> int:
@@ -424,13 +419,9 @@ def get_likes_of_comment(comment_id: int) -> int:
     return comment.likes_nbr if comment else 0
 
 
-def get_likes_count_of_comment(comment_id: int) -> int:
-    likes = load_likes()
-    return sum(1 for c_id, _ in likes if c_id == comment_id)
-
 
 def is_comment_liked_by_me(comment_id: int, user_id: int) -> bool:
-    likes = load_likes()
+    likes = load_comment_likes()
     return (comment_id, user_id) in likes
 
 
