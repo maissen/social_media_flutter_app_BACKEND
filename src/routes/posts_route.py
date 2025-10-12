@@ -288,12 +288,19 @@ def create_new_comment(
     try:
         comment = add_comment_to_post(current_user, post_id, content.content)
 
-        return GenericResponse(
-            success=True,
-            data=comment.dict(),
-            message="Comment created successfully",
-            timestamp=datetime.utcnow()
-        )
+        if comment is not None:
+            return GenericResponse(
+                success=True,
+                data=comment,
+                message="Comment created successfully",
+                timestamp=datetime.utcnow()
+            )
+        else:
+            return GenericResponse(
+                success=False,
+                message="Failed to create comment",
+                timestamp=datetime.utcnow()
+            )
 
     except Exception as e:
         print(f"Error creating comment: {e}")

@@ -191,11 +191,11 @@ def dislike_post(user_id: int, post_id: int) -> bool:
 
 def add_comment_to_post(user_id: int, post_id: int, comment_payload: str) -> Optional[CommentProfile]:
 
-    if not get_post_by_id(post_id):
+    if get_post_by_id(post_id) is None:
         return None
     
     user = get_user_by_id(user_id)
-    if not user:
+    if user is None:
         return None
     
     comments = load_data_from_dat_file(COMMENTS_DB)
