@@ -305,7 +305,7 @@ def create_new_comment(
         )
     
 
-@router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_200_OK)
 def delete_comment(
     comment_id: int = Query(..., description="ID of the comment to delete"),
     post_id: int = Query(..., description="ID of the post the comment belongs to"),

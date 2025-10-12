@@ -1,9 +1,13 @@
 import pickle
-from typing import List, Optional
-from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
-from src.crud.followers_crud import check_following_status
+from typing import List, Tuple, Optional
+from src.schemas.users import UserSchema, UserProfileSchema, UpdateBioRequest, UpdateProfilePictureRequest
 
 USERS_DB_FILE = "database/users_database.dat"
+DB_FILE = "database/followers_database.dat"
+
+# ======================
+# Users CRUD
+# ======================
 
 def load_users() -> list[UserSchema]:
     """Load users from the file."""
@@ -57,17 +61,8 @@ def update_user_profile_picture(user_id: int, payload: UpdateProfilePictureReque
             return user
     return None  # User not found
 
-
 def find_matching_username(current_user: int, username: str) -> List[UserSchema]:
-    """
-    Search for users whose username contains the username (case-insensitive).
-
-    Args:
-        username (str): Substring to search for in usernames.
-
-    Returns:
-        List[UserSchema]: List of matching users.
-    """
+    """Search for users whose username contains the username (case-insensitive)."""
     username = username.lower()
     users = load_users()
     matching_users = [user for user in users if username in user.username.lower()]
@@ -76,7 +71,6 @@ def find_matching_username(current_user: int, username: str) -> List[UserSchema]
         user.is_following = check_following_status(user_1=current_user, user_2=user.user_id) 
 
     return matching_users
-
 
 def increment_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
     """Increment the post count of a user by 1."""
@@ -88,7 +82,6 @@ def increment_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
             return user
     return None  # User not found
 
-
 def decrement_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
     """Decrement the post count of a user by 1 (not below 0)."""
     users = load_users()
@@ -99,19 +92,8 @@ def decrement_posts_count_of_user(user_id: int) -> Optional[UserSchema]:
             return user
     return None  # User not found
 
-
 def update_user_profile_picture(file: str, user_id: int) -> Optional[UserSchema]:
-    """
-    Update a user's profile picture with the given file path or filename
-    and save the updated user list to the file database.
-
-    Args:
-        file (str): Path or filename of the uploaded profile picture.
-        user_id (int): ID of the user to update.
-
-    Returns:
-        Optional[UserSchema]: The updated user object, or None if not found.
-    """
+    """Update a user's profile picture with the given file path or filename."""
     users = load_users()
     for user in users:
         if user.user_id == user_id:
@@ -119,3 +101,137 @@ def update_user_profile_picture(file: str, user_id: int) -> Optional[UserSchema]
             save_users(users)
             return user
     return None  # User not found
+
+
+# ======================
+# Followers CRUD
+# ======================
+
+def load_followers() -> List[Tuple[int, int]]:
+    """Load the followers database from file."""
+    try:
+        with open(DB_FILE, "rb") as f:
+            return pickle.load(f)
+    except (FileNotFoundError, EOFError):
+        return []
+
+def save_followers(followers: List[Tuple[int, int]]):
+    """Save the followers database to file."""
+    with open(DB_FILE, "wb") as f:
+        pickle.dump(followers, f)
+
+def check_following_status(user_1: int, user_2: int) -> bool:
+    """Check if user_1 is following user_2."""
+    followers = load_followers()
+    return (user_1, user_2) in followers or (user_2, user_1) in followers
+
+def follow(user_1: int, user_2: int) -> bool:
+    """Make user_1 follow user_2."""
+    if user_1 == user_2:
+        return False  # Cannot follow oneself
+    
+    followers = load_followers()
+    if (user_1, user_2) in followers:
+        return False  # Already following
+
+    followers.append((user_1, user_2))
+    save_followers(followers)
+
+    increment_followers_count_of_user(user_2)
+    return True
+
+def unfollow(user_1: int, user_2: int) -> bool:
+    """Make user_1 unfollow user_2."""
+    followers = load_followers()
+    if (user_1, user_2) not in followers:
+        return False  # Not following
+    
+    followers.remove((user_1, user_2))
+    save_followers(followers)
+
+    decrement_followers_count_of_user(user_2)
+    return True
+
+def get_followers_of_user(user_id: int) -> List[UserProfileSchema]:
+    """Get all users who are following the given user."""
+    followers_list = load_followers()
+    follower_ids = [follower_id for (follower_id, following_id) in followers_list if following_id == user_id]
+
+    followers_data: List[UserProfileSchema] = []
+
+    for fid in follower_ids:
+        user = get_user_by_id(fid)
+        if user:
+            followers_data.append(UserProfileSchema(
+                user_id=user.user_id,
+                email=user.email,
+                username=user.username,
+                bio=user.bio,
+                profile_picture=user.profile_picture,
+                followers_count=user.followers_count,
+                following_count=user.following_count,
+                posts_count=user.posts_count,
+                created_at=user.created_at,
+                is_following=True
+            ))
+
+    return followers_data
+
+def get_followings_of_user(user_id: int) -> List[UserProfileSchema]:
+    """Get all users that the given user is following."""
+    followers_list = load_followers()
+    following_ids = [following_id for (follower_id, following_id) in followers_list if follower_id == user_id]
+
+    following_data: List[UserProfileSchema] = []
+
+    for fid in following_ids:
+        user = get_user_by_id(fid)
+        if user:
+            following_data.append(UserProfileSchema(
+                user_id=user.user_id,
+                email=user.email,
+                username=user.username,
+                bio=user.bio,
+                profile_picture=user.profile_picture,
+                followers_count=user.followers_count,
+                following_count=user.following_count,
+                posts_count=user.posts_count,
+                created_at=user.created_at,
+                is_following=check_following_status(user_1=user_id, user_2=fid)
+            ))
+            
+    return following_data
+
+def increment_followers_count_of_user(user_id: int) -> bool:
+    """Increment the followers_count of a user by 1."""
+    users = load_users()
+    user_found = False
+
+    for user in users:
+        if user.user_id == user_id:
+            user.followers_count += 1
+            user_found = True
+            break
+
+    if user_found:
+        save_users(users)
+        return True
+    
+    return False
+
+def decrement_followers_count_of_user(user_id: int) -> bool:
+    """Decrement the followers_count of a user by 1 (if > 0)."""
+    users = load_users()
+    user_found = False
+
+    for user in users:
+        if user.user_id == user_id:
+            if user.followers_count > 0:
+                user.followers_count -= 1
+            user_found = True
+            break
+
+    if user_found:
+        save_users(users)
+        return True
+    return False
