@@ -32,6 +32,8 @@ def check_following_status(user_1: int, user_2: int) -> bool:
     followers = load_followers()
     return (user_1, user_2) in followers
 
+
+
 def follow(user_1: int, user_2: int) -> bool:
     """
     Make user_1 follow user_2.
@@ -48,7 +50,13 @@ def follow(user_1: int, user_2: int) -> bool:
 
     followers.append((user_1, user_2))
     save_followers(followers)
+
+    # Update followers count
+    increment_followers_count_of_user(user_2)
+    
     return True
+
+
 
 def unfollow(user_1: int, user_2: int) -> bool:
     """
@@ -63,6 +71,10 @@ def unfollow(user_1: int, user_2: int) -> bool:
     
     followers.remove((user_1, user_2))
     save_followers(followers)
+
+    # Update followers count
+    decrement_followers_count_of_user(user_2)
+    
     return True
 
 
@@ -127,3 +139,59 @@ def get_followings_of_user(user_id: int) -> List[UserSearchedSchema]:
                 profile_picture=user.profile_picture
             ))
     return following_data
+
+
+
+def increment_followers_count_of_user(user_id: int) -> bool:
+    """
+    Increment the followers_count of a user by 1.
+
+    Args:
+        user_id (int): The ID of the user whose followers count will increase.
+
+    Returns:
+        bool: True if successful, False if user not found.
+    """
+    users = load_users()
+    user_found = False
+
+    for user in users:
+        if user.user_id == user_id:
+            user.followers_count += 1
+            user_found = True
+            break
+
+    if user_found:
+        # Assuming you have a save_users(users) function similar to load_users()
+        from src.users_crud import save_users
+        save_users(users)
+        return True
+    
+    return False
+
+
+def decrement_followers_count_of_user(user_id: int) -> bool:
+    """
+    Decrement the followers_count of a user by 1 (if > 0).
+
+    Args:
+        user_id (int): The ID of the user whose followers count will decrease.
+
+    Returns:
+        bool: True if successful, False if user not found.
+    """
+    users = load_users()
+    user_found = False
+
+    for user in users:
+        if user.user_id == user_id:
+            if user.followers_count > 0:
+                user.followers_count -= 1
+            user_found = True
+            break
+
+    if user_found:
+        from src.users_crud import save_users
+        save_users(users)
+        return True
+    return False
