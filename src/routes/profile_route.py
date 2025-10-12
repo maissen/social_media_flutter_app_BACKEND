@@ -4,7 +4,7 @@ import os
 import shutil
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
-from src.users_crud import update_user_profile_picture
+from src.crud.users_crud import update_user_profile_picture
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 

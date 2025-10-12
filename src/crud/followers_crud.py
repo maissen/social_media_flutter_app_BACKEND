@@ -2,7 +2,7 @@ import pickle
 from typing import List, Tuple
 
 from src.schemas.users import UserProfileSchema, UserSearchedSchema
-from src.users_crud import get_user_by_id, load_users
+from src.crud.users_crud import get_user_by_id, load_users
 
 DB_FILE = "database/followers_database.dat"
 
@@ -176,7 +176,7 @@ def increment_followers_count_of_user(user_id: int) -> bool:
 
     if user_found:
         # Assuming you have a save_users(users) function similar to load_users()
-        from src.users_crud import save_users
+        from crud.users_crud import save_users
         save_users(users)
         return True
     
@@ -204,7 +204,7 @@ def decrement_followers_count_of_user(user_id: int) -> bool:
             break
 
     if user_found:
-        from src.users_crud import save_users
+        from crud.users_crud import save_users
         save_users(users)
         return True
     return False

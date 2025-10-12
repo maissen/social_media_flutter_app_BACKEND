@@ -2,7 +2,7 @@ import pickle
 from datetime import datetime
 from typing import List, Optional, Tuple
 from src.schemas.posts import PostSchema, CommentProfile
-from src.users_crud import get_user_by_id, USERS_DB_FILE
+from src.crud.users_crud import get_user_by_id, USERS_DB_FILE
 
 
 # ====================================================

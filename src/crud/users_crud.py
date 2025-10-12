@@ -1,7 +1,7 @@
 import pickle
 from typing import List, Optional
 from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
-from src.followers_crud import check_following_status
+from src.crud.followers_crud import check_following_status
 
 USERS_DB_FILE = "database/users_database.dat"
 

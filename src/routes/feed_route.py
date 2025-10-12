@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status
 from datetime import datetime
-from src.posts_crud import load_feed_of_user, load_recent_posts
+from src.crud.posts_and_comments_crud import load_feed_of_user, load_recent_posts
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
-from src.users_crud import get_user_by_id
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 
