@@ -10,4 +10,4 @@ services:
       SECRET_KEY: mysecret
       ALGORITHM: HS256
       UPLOAD_DIR: "uploads/"
-      UPLOAD_FILES_PREFIX: "localhost:8000/"
+      UPLOAD_FILES_PREFIX: "http://localhost:8000/"

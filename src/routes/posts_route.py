@@ -52,7 +52,11 @@ async def create_post(
         media_url = ""
         if media_file:
             file_ext = os.path.splitext(media_file.filename)[1]
-            file_name = f"post_{post_id}{file_ext}"
+
+            # Use current timestamp in seconds for the filename
+            timestamp_seconds = int(datetime.utcnow().timestamp())
+            file_name = f"post_{timestamp_seconds}{file_ext}"
+            
             file_path = os.path.join(UPLOAD_DIR, file_name)
 
             os.makedirs(UPLOAD_DIR, exist_ok=True)
