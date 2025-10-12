@@ -1037,19 +1037,24 @@ async function updateProfileBio() {
 
 
 
+// Profile picture update
 async function updateProfilePicture() {
     const fileInput = document.getElementById('profilePictureInput');
     const file = fileInput.files[0];
 
-    if (!file) {
-        alert('Please select an image file.');
-        return;
-    }
+    if (!file) return;
+
+    // Optional: preview before upload
+    const reader = new FileReader();
+    reader.onload = () => {
+        document.getElementById('profileModalAvatar').src = reader.result;
+    };
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('file', file);
 
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-
         const response = await fetch(`${API_BASE_URL}/users/update-profile-picture`, {
             method: 'PUT',
             headers: {
@@ -1060,20 +1065,22 @@ async function updateProfilePicture() {
 
         const data = await response.json();
 
-        if (data.success && data.data) {
-            alert('Profile picture updated successfully!');
+        if (data.success && data.data.file_url) {
             document.getElementById('profileModalAvatar').src = data.data.file_url;
-            document.getElementById('navAvatar').src = data.data.file_url;
             currentUserData.profile_picture = data.data.file_url;
             localStorage.setItem('currentUser', JSON.stringify(currentUserData));
-            loadUserProfile();
+            alert("Profile picture updated!");
         } else {
-            alert(data.message || 'Failed to update profile picture');
+            alert(data.message || "Failed to update profile picture.");
         }
-    } catch (error) {
-        console.error('Error updating profile picture:', error);
-        alert('Network error. Please try again.');
+    } catch (err) {
+        console.error(err);
+        alert("Network error");
     }
 }
+
+// Trigger upload when file is selected
+document.getElementById('profilePictureInput').addEventListener('change', updateProfilePicture);
+
 
 
