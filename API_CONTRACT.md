@@ -531,6 +531,52 @@ Development: http://localhost:8000/v1
 ```
 ---
 
+### 4.8 Get Likes of a Post
+**GET** `/posts/likes?post_id=1`
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Query Parameters:**
+- `post_id` (required): ID of the post to retrieve likes for
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "user_id": 7,
+      "email": "user@example.com",
+      "username": "johndoe",
+      "profile_picture": "https://storage.com/profile.jpg",
+      "is_following": false
+    }
+  ],
+  "message": "likes fetched successfully",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
+
+**Response:** `404 Not Found`
+```json
+{
+  "success": false,
+  "message": "Post not found",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
+
+**Response:** `500 Internal Server Error`
+```json
+{
+  "success": false,
+  "message": "Failed to retrieve likes of post",
+  "timestamp": "2025-10-06T10:30:00Z"
+}
+```
+
+---
+
 ## 5. Comments
 
 ### 5.1 Create Comment
