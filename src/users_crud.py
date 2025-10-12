@@ -1,6 +1,7 @@
 import pickle
 from typing import List, Optional
 from src.schemas.users import UserSchema, UpdateBioRequest, UpdateProfilePictureRequest
+from src.followers_crud import check_following_status
 
 USERS_DB_FILE = "database/users_database.dat"
 
@@ -57,7 +58,7 @@ def update_user_profile_picture(user_id: int, payload: UpdateProfilePictureReque
     return None  # User not found
 
 
-def find_matching_username(username: str) -> List[UserSchema]:
+def find_matching_username(current_user: int, username: str) -> List[UserSchema]:
     """
     Search for users whose username contains the username (case-insensitive).
 
@@ -70,6 +71,10 @@ def find_matching_username(username: str) -> List[UserSchema]:
     username = username.lower()
     users = load_users()
     matching_users = [user for user in users if username in user.username.lower()]
+
+    for user in matching_users:
+        user.is_following = check_following_status(user_1=current_user, user_2=user.user_id) 
+
     return matching_users
 
 

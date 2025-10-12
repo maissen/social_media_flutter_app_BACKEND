@@ -1,7 +1,7 @@
 import pickle
 from typing import List, Tuple
 
-from src.schemas.users import UserSearchedSchema
+from src.schemas.users import UserProfileSchema, UserSearchedSchema
 from src.users_crud import get_user_by_id, load_users
 
 DB_FILE = "database/followers_database.dat"
@@ -30,7 +30,7 @@ def check_following_status(user_1: int, user_2: int) -> bool:
         True if following, False otherwise
     """
     followers = load_followers()
-    return (user_1, user_2) in followers
+    return (user_1, user_2) in followers or (user_2, user_1) in followers
 
 
 
@@ -74,11 +74,11 @@ def unfollow(user_1: int, user_2: int) -> bool:
 
     # Update followers count
     decrement_followers_count_of_user(user_2)
-    
+
     return True
 
 
-def get_followers_of_user(user_id: int) -> List[UserSearchedSchema]:
+def get_followers_of_user(user_id: int) -> List[UserProfileSchema]:
     """
     Get all users who are following the given user.
 
@@ -94,24 +94,29 @@ def get_followers_of_user(user_id: int) -> List[UserSearchedSchema]:
     # Find all follower IDs for this user
     follower_ids = [follower_id for (follower_id, following_id) in followers_list if following_id == user_id]
 
-    # Load all users
-    users = load_users()
+    #
+    followers_data: List[UserProfileSchema] = []
 
-    # Build response with minimal info (UserSearchedSchema)
-    followers_data: List[UserSearchedSchema] = []
     for fid in follower_ids:
         user = get_user_by_id(fid)
         if user:
-            followers_data.append(UserSearchedSchema(
+            followers_data.append(UserProfileSchema(
                 user_id=user.user_id,
-                username=user.username,
                 email=user.email,
-                profile_picture=user.profile_picture
+                username=user.username,
+                bio=user.bio,
+                profile_picture=user.profile_picture,
+                followers_count=user.followers_count,
+                following_count=user.following_count,
+                posts_count=user.posts_count,
+                created_at=user.created_at,
+                is_following=True
             ))
+
     return followers_data
 
 
-def get_followings_of_user(user_id: int) -> List[UserSearchedSchema]:
+def get_followings_of_user(user_id: int) -> List[UserProfileSchema]:
     """
     Get all users that the given user is following.
 

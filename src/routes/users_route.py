@@ -1,5 +1,7 @@
+import os
+import shutil
 from typing import List
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from datetime import datetime
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
@@ -9,7 +11,8 @@ from src.followers_crud import check_following_status, follow, get_followers_of_
 
 
 router = APIRouter(prefix="", tags=["User Management"])
-
+UPLOAD_DIR = "uploads/profile_pictures"
+UPLOAD_FILE_PREFIX = "url"
 
 @router.get("/profile/{user_id}", response_model=GenericResponse)
 def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_token)):
@@ -93,47 +96,56 @@ def update_user_bio(
         )
 
 
-# @router.put("/update/profile-picture", response_model=GenericResponse)
-# def update_profile_picture(
-#     payload: UpdateProfilePictureRequest, 
-#     current_user=Depends(get_current_user_from_token)
-# ):
-#     """Update user profile picture."""
-#     try:
-        
-#         if not current_user:
-#             return GenericResponse(
-#                 success=False,
-#                 data=None,
-#                 message="User not found",
-#                 timestamp=datetime.utcnow()
-#             )
-        
-#         # Update the profile picture
-#         print("current user " + str(current_user.user_id))
-#         current_user.profile_picture = payload.profile_picture
 
-#         update_user_profile_picture(
-#             user_id=current_user.user_id,
-#             payload=UpdateProfilePictureRequest(profile_picture=current_user.profile_picture)
-#         )
-#         return GenericResponse(
-#             success=True,
-#             data={
-#                 "profile_picture": current_user.profile_picture
-#             },
-#             message="Profile picture updated successfully",
-#             timestamp=datetime.utcnow()
-#         )
-    
-#     except Exception as e:
-#         print(e)
-#         return GenericResponse(
-#             success=False,
-#             data=None,
-#             message="Failed",
-#             timestamp=datetime.utcnow()
-#         )
+@router.post("/update-profile-picture", response_model=GenericResponse, status_code=status.HTTP_200_OK)
+async def update_profile_picture(
+    file: UploadFile = File(..., description="Profile picture to upload"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Upload a new profile picture for the current user.
+    The image file is saved to the server in `static/uploads/profile_pictures/`.
+    """
+
+    try:
+        # Validate file type (only images)
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file type. Only image files are allowed."
+            )
+
+        # Create a unique filename
+        filename = f"user_{current_user.user_id}_{int(datetime.utcnow().timestamp())}_{file.filename}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+
+        # Save file to disk
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Example: you might update the user's profile picture in DB here
+        # update_user_profile_picture(current_user.id, filename)
+
+        file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"  # if served by StaticFiles (e.g., app.mount("/static", StaticFiles(...)))
+
+        update_user_profile_picture(file=file_url, user_id=current_user.user_id)
+
+        return GenericResponse(
+            success=True,
+            data={"file_url": file_url},
+            message="Profile picture updated successfully",
+            timestamp=datetime.utcnow()
+        )
+
+    except Exception as e:
+        print(f"Error updating profile picture: {e}")
+        return GenericResponse(
+            success=False,
+            data=None,
+            message="Failed to upload profile picture",
+            timestamp=datetime.utcnow()
+        )
+
     
 
 @router.get("/search", response_model=GenericResponse)
@@ -147,7 +159,7 @@ def search_users(
     """
     try:
         # Search for users with matching username (case-insensitive)
-        matching_users = find_matching_username(username=username)
+        matching_users = find_matching_username(current_user=current_user.user_id, username=username)
         
         if not matching_users or matching_users == []:
             return GenericResponse(
@@ -161,13 +173,21 @@ def search_users(
         for user in matching_users:
             results.append(get_user_by_id(user.user_id))
         
-        # Convert to schema
-        results = [UserSearchedSchema(
-            user_id=user.user_id,
-            email=user.email,
-            username=user.username,
-            profile_picture=user.profile_picture
-        ) for user in matching_users]
+        # Convert to UserProfileSchema and set `is_following`
+        results = []
+        for user in matching_users:
+            results.append(UserProfileSchema(
+                user_id=user.user_id,
+                email=user.email,
+                username=user.username,
+                bio=user.bio,
+                profile_picture=user.profile_picture,
+                followers_count=user.followers_count,
+                following_count=user.following_count,
+                posts_count=user.posts_count,
+                created_at=user.created_at,
+                is_following=user.is_following
+            ))
         
         return GenericResponse(
             success=True,
