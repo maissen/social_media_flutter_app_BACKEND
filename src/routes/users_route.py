@@ -68,7 +68,7 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
 
 
 @router.put("/update/bio", response_model=GenericResponse)
-def update_user_bio(
+def update_bio(
     payload: UpdateBioRequest,
     current_user=Depends(get_current_user_from_token)
 ):

@@ -46,7 +46,7 @@ def update_user_bio(user_id: int, payload: UpdateBioRequest) -> Optional[UserSch
     users = load_users()
     for user in users:
         if user.user_id == user_id:
-            user.bio = payload.new_bio
+            user.bio = payload
             save_users(users)
             return user
     return None  # User not found
