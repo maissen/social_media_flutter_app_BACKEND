@@ -3,6 +3,7 @@ const API_BASE_URL = 'http://localhost:8000';
 let authToken = localStorage.getItem('authToken') || null;
 let currentUserData = JSON.parse(localStorage.getItem('currentUser')) || null;
 let currentPage = 'feed';
+let currentProfileUserId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     if (authToken && currentUserData) {
@@ -256,7 +257,7 @@ function createPostCard(post) {
         <div class="post-content">${post.content || ''}</div>
         ${post.media_url ? `<img class="post-image" src="${post.media_url}" alt="Post image">` : ''}
         <div class="post-stats">
-            <span>${likesCount} likes</span>
+            <span onclick="viewPostLikes(${post.post_id})">${likesCount} likes</span>
             <span>${commentsCount} comments</span>
         </div>
         <div class="post-actions">
@@ -378,7 +379,10 @@ function createCommentElement(comment) {
         <div class="comment-content">${comment.comment_payload}</div>
         <div class="comment-actions">
             <span class="comment-action ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike(${comment.comment_id}, ${comment.post_id})">
-                ${isLiked ? '❤️' : '🤍'} ${likesCount} Like${likesCount !== 1 ? 's' : ''}
+                ${isLiked ? '❤️' : '🤍'} Like
+            </span>
+            <span class="comment-action" onclick="viewCommentLikes(${comment.comment_id})" style="color: #65676b;">
+                ${likesCount} ${likesCount !== 1 ? 'likes' : 'like'}
             </span>
             ${comment.user_id == currentUserData.user_id ? `<span class="comment-action" onclick="deleteComment(${comment.comment_id}, ${comment.post_id})">Delete</span>` : ''}
         </div>
@@ -611,6 +615,8 @@ function viewMyProfile() {
 }
 
 async function showProfileModal(profile) {
+    currentProfileUserId = profile.user_id;
+
     document.getElementById('profileModalUsername').textContent = profile.username;
     document.getElementById('profileModalAvatar').src = profile.profile_picture || 'https://via.placeholder.com/100';
     document.getElementById('profileModalName').textContent = profile.username;
@@ -681,8 +687,160 @@ async function toggleFollow(userId, button) {
             button.className = `btn-follow ${isFollowing ? 'following' : ''}`;
             button.textContent = isFollowing ? 'Unfollow' : 'Follow';
             loadUserProfile();
+
+            const currentFollowers = parseInt(document.getElementById('profileModalFollowers').textContent);
+            document.getElementById('profileModalFollowers').textContent = isFollowing ? currentFollowers + 1 : currentFollowers - 1;
         }
     } catch (error) {
         console.error('Error toggling follow:', error);
     }
+}
+
+async function viewFollowers() {
+    if (!currentProfileUserId) return;
+
+    const modal = document.getElementById('followersModal');
+    const list = document.getElementById('followersList');
+    const title = document.getElementById('followersModalTitle');
+
+    title.textContent = 'Followers';
+    list.innerHTML = '<div class="loading">Loading followers...</div>';
+    modal.classList.add('active');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/followers?user_id=${currentProfileUserId}`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            list.innerHTML = '';
+            data.data.forEach(user => {
+                const userCard = createUserCard(user);
+                list.appendChild(userCard);
+            });
+        } else {
+            list.innerHTML = '<div class="empty-state"><h3>No followers yet</h3></div>';
+        }
+    } catch (error) {
+        list.innerHTML = '<div class="empty-state"><h3>Error loading followers</h3></div>';
+    }
+}
+
+async function viewFollowing() {
+    if (!currentProfileUserId) return;
+
+    const modal = document.getElementById('followersModal');
+    const list = document.getElementById('followersList');
+    const title = document.getElementById('followersModalTitle');
+
+    title.textContent = 'Following';
+    list.innerHTML = '<div class="loading">Loading following...</div>';
+    modal.classList.add('active');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/followings?user_id=${currentProfileUserId}`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            list.innerHTML = '';
+            data.data.forEach(user => {
+                const userCard = createUserCard(user);
+                list.appendChild(userCard);
+            });
+        } else {
+            list.innerHTML = '<div class="empty-state"><h3>Not following anyone yet</h3></div>';
+        }
+    } catch (error) {
+        list.innerHTML = '<div class="empty-state"><h3>Error loading following</h3></div>';
+    }
+}
+
+function closeFollowersModal() {
+    document.getElementById('followersModal').classList.remove('active');
+}
+
+function createUserCard(user) {
+    const userCard = document.createElement('div');
+    userCard.className = 'user-card';
+
+    userCard.innerHTML = `
+        <img class="user-card-avatar" src="${user.profile_picture || 'https://via.placeholder.com/50'}" alt="${user.username}">
+        <div class="user-card-info">
+            <div class="user-card-name">${user.username}</div>
+            <div class="user-card-bio">${user.bio || 'No bio'}</div>
+        </div>
+    `;
+
+    userCard.onclick = () => {
+        closeFollowersModal();
+        closeProfileModal();
+        viewProfile(user.user_id);
+    };
+
+    return userCard;
+}
+
+async function viewPostLikes(postId) {
+    const modal = document.getElementById('likesModal');
+    const list = document.getElementById('likesList');
+
+    list.innerHTML = '<div class="loading">Loading likes...</div>';
+    modal.classList.add('active');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/${postId}/likes`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            list.innerHTML = '';
+            data.data.forEach(user => {
+                const userCard = createUserCard(user);
+                list.appendChild(userCard);
+            });
+        } else {
+            list.innerHTML = '<div class="empty-state"><h3>No likes yet</h3></div>';
+        }
+    } catch (error) {
+        list.innerHTML = '<div class="empty-state"><h3>Error loading likes</h3><p>This feature may not be available in the API</p></div>';
+    }
+}
+
+async function viewCommentLikes(commentId) {
+    const modal = document.getElementById('likesModal');
+    const list = document.getElementById('likesList');
+
+    list.innerHTML = '<div class="loading">Loading likes...</div>';
+    modal.classList.add('active');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/comments/${commentId}/likes`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            list.innerHTML = '';
+            data.data.forEach(user => {
+                const userCard = createUserCard(user);
+                list.appendChild(userCard);
+            });
+        } else {
+            list.innerHTML = '<div class="empty-state"><h3>No likes yet</h3></div>';
+        }
+    } catch (error) {
+        list.innerHTML = '<div class="empty-state"><h3>Error loading likes</h3><p>This feature may not be available in the API</p></div>';
+    }
+}
+
+function closeLikesModal() {
+    document.getElementById('likesModal').classList.remove('active');
 }
