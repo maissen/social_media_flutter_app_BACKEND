@@ -38,6 +38,12 @@ def save_data_to_dat_file(file_path: str, data):
 # 🔹 Post CRUD
 # ====================================================
 
+def get_post_by_id(post_id: int) -> Optional[PostSchema]:
+    posts = load_data_from_dat_file(POSTS_DB)
+    return next((p for p in posts if p.post_id == post_id), None)
+
+
+
 def create_new_post(post: PostSchema) -> Optional[PostSchema]:
 
     posts = load_data_from_dat_file(POSTS_DB)
@@ -50,10 +56,6 @@ def create_new_post(post: PostSchema) -> Optional[PostSchema]:
     return post
 
 
-def get_post_by_id(post_id: int) -> Optional[PostSchema]:
-    posts = load_data_from_dat_file(POSTS_DB)
-    return next((p for p in posts if p.post_id == post_id), None)
-
 
 def get_posts_of_user(current_user_id: int, target_user_id: int) -> List[PostSchema]:
 
@@ -62,6 +64,7 @@ def get_posts_of_user(current_user_id: int, target_user_id: int) -> List[PostSch
     
     for post in user_posts:
         post.is_liked_by_me = is_post_liked_by_me(current_user_id, post.post_id)
+    
     return user_posts
 
 
@@ -73,21 +76,24 @@ def delete_a_post(post_id: int) -> bool:
     if len(new_posts) == len(posts):
         return False
     
+    decrement_posts_count_of_user(user_id=get_post_by_id(post_id).user_id)
+    
     save_data_to_dat_file(POSTS_DB, new_posts)
     return True
+
 
 
 def update_a_post(post_id: int, payload: str) -> Optional[PostSchema]:
 
     posts = load_data_from_dat_file(POSTS_DB)
 
-    post = get_post_by_id(post_id)
-    if not post:
-        return None
-    
-    post.content = payload
-    save_data_to_dat_file(POSTS_DB, posts)
-    return post
+    for p in posts:
+        if p.post_id == post_id:
+            p.content = payload
+            save_data_to_dat_file(POSTS_DB, posts)
+            return p
+
+    return None
 
 
 # ====================================================
@@ -158,6 +164,7 @@ def like_post(user_id: int, post_id: int) -> bool:
     
     likes = load_data_from_dat_file(LIKES_DB)
     likes.append((user_id, post_id))
+
     save_data_to_dat_file(LIKES_DB, likes)
 
     increment_likes_count_of_post(post_id=post_id)
@@ -171,6 +178,7 @@ def dislike_post(user_id: int, post_id: int) -> bool:
     
     likes = load_data_from_dat_file(LIKES_DB)
     likes.remove((user_id, post_id))
+
     save_data_to_dat_file(LIKES_DB, likes)
     
     decrement_likes_count_of_post(post_id=post_id)
@@ -256,12 +264,15 @@ def decrement_comments_count_of_post(post_id: int) -> bool:
 
 
 def increment_likes_count_of_post(post_id: int) -> bool:
+
     posts = load_data_from_dat_file(POSTS_DB)
+
     for p in posts:
         if p.post_id == post_id:
             p.likes_nbr += 1
             save_data_to_dat_file(POSTS_DB, posts)
             return True
+        
     return False
 
 
@@ -292,14 +303,17 @@ def load_follows() -> list[dict]:
     try:
         with open(FOLLOWERS_DB, "rb") as f:
             return pickle.load(f)
+        
     except (FileNotFoundError, EOFError):
         return []
 
 
 def load_feed_of_user(user_id: int) -> list[PostSchema]:
+
     posts = load_posts()
     follows = load_follows()
     following_ids = []
+    
     for f in follows:
         if isinstance(f, dict):
             if f["follower_id"] == user_id:
@@ -308,9 +322,11 @@ def load_feed_of_user(user_id: int) -> list[PostSchema]:
             follower_id, following_id = f[0], f[1]
             if follower_id == user_id:
                 following_ids.append(following_id)
+    
     user_and_following_ids = [user_id] + following_ids
     user_feed_posts = [post for post in posts if post.user_id in user_and_following_ids]
     user_feed_posts.sort(key=lambda p: p.created_at, reverse=True)
+    
     return user_feed_posts
 
 
@@ -337,16 +353,14 @@ def save_comments(comments: List[CommentProfile]):
         pickle.dump(comments, f)
 
 
-def get_new_comment_id() -> int:
-    comments = load_comments()
-    if not comments:
-        return 1
-    return max(comment.comment_id for comment in comments) + 1
+def get_comments_of_post(post_id: int, current_user_id: int) -> List[CommentProfile]:
+    all_comments = load_comments()
+    needed_comments = [c for c in all_comments if c.post_id == post_id]
 
+    for c in needed_comments:
+        c.is_liked_by_me = is_comment_liked_by_me(comment_id=c.comment_id, user_id=current_user_id)
 
-def get_comments_of_post(post_id: int) -> List[CommentProfile]:
-    comments = load_comments()
-    return [c for c in comments if c.post_id == post_id]
+    return needed_comments
 
 
 # ====================================================
@@ -367,18 +381,23 @@ def save_likes(likes: List[Tuple[int, int]]):
 
 
 def like_comment_of_post(comment_id: int, user_id: int) -> bool:
+
     comments = load_comments()
     likes = load_likes()
+    
     if (comment_id, user_id) in likes:
         return False
+    
     comment = get_comment_by_id(comment_id)
     if not comment:
         return False
+    
     comment.likes_nbr += 1
     comment.is_liked_by_me = True
     likes.append((comment_id, user_id))
     save_comments(comments)
     save_likes(likes)
+    
     return True
 
 
