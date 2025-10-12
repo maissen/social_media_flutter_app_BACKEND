@@ -2,12 +2,12 @@ import os
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
-from src.crud.posts_and_comments_crud import create_comment, delete_comment_of_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, get_likes_of_comment, is_comment_liked_by_me, like_comment_of_post
-from src.crud.posts_and_comments_crud import decrement_comments_count_of_post, delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, increment_comments_count_of_post, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
+from src.crud.posts_and_comments_crud import add_comment_to_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, get_likes_of_comment, is_comment_liked_by_me, like_comment_of_post
+from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
-from src.users_crud import increment_posts_count_of_user
+
 
 # Directory where uploaded media will be stored
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/")
@@ -68,7 +68,6 @@ async def create_post(
         )
 
         create_new_post(new_post)
-        increment_posts_count_of_user(current_user.user_id)
 
         return GenericResponse(
             success=True,
@@ -285,8 +284,7 @@ def create_new_comment(
     The post_id is provided as a query parameter.
     """
     try:
-        comment = create_comment(current_user, post_id, content.content)
-        increment_comments_count_of_post(post_id=post_id)
+        comment = add_comment_to_post(current_user, post_id, content.content)
 
         return GenericResponse(
             success=True,
@@ -316,7 +314,7 @@ def delete_comment(
     Only the comment owner or an admin should be allowed to delete (if implemented).
     """
     try:
-        success = delete_comment_of_post(comment_id, post_id)
+        success = remove_comment_from_post(comment_id, post_id)
 
         if not success:
             return GenericResponse(
@@ -325,7 +323,6 @@ def delete_comment(
                 timestamp=datetime.utcnow()
             )
 
-        decrement_comments_count_of_post(post_id=post_id)
         return GenericResponse(
             success=True,
             message="Comment deleted successfully",
@@ -386,12 +383,11 @@ def toggle_like_comment(
                 timestamp=datetime.utcnow()
             )
 
-        likes_count = get_likes_of_comment(comment_id)
         return GenericResponse(
             success=True,
             data={
                 "is_liked": is_comment_liked_by_me(comment_id=comment_id, user_id=current_user.user_id),
-                "likes_nbr": likes_count
+                "likes_nbr": comment.likes_nbr
             },
             message=f"Comment {action} successfully",
             timestamp=datetime.utcnow()
