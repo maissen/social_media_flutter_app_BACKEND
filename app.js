@@ -466,7 +466,7 @@ async function deletePost(postId) {
     if (!confirm('Delete this post?')) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/posts/delete/${postId}`, {
+        const response = await fetch(`${API_BASE_URL}/posts/delete?post_id=${postId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
