@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from src.schemas.auth import RegisterUserRequest, LoginRequest
 from src.schemas.generic_response import GenericResponse
@@ -10,19 +12,21 @@ from src.schemas.users import UserSchema
 router = APIRouter(prefix="", tags=["Authentication"])
 
 
-
 @router.post("/register", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: RegisterUserRequest):
     try:
         existing_user = get_user_by_email(payload.email)
         if existing_user:
-            return GenericResponse(
-                success=False,
-                message="Email already exists",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Email already exists",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
-        # Create new user object
+        # Create new user
         user = UserSchema(
             user_id=generate_new_user_id(),
             email=payload.email,
@@ -37,20 +41,25 @@ def register_user(payload: RegisterUserRequest):
             is_following=False
         )
 
-        # add user to db
         insert_new_user(user=user)
 
-        return GenericResponse(
-            success=True,
-            message="User registered successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                message="User registered successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            message="Oops, failed to register user",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="Oops, failed to register user",
+                timestamp=datetime.utcnow()
+            ))
         )
 
 
@@ -59,61 +68,78 @@ def login(payload: LoginRequest):
     try:
         user = get_user_by_email(payload.email)
         if not user:
-            return GenericResponse(
-                success=False,
-                message="User with that email does not exist",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="User with that email does not exist",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         if not verify_password(payload.password, user.password):
-            return GenericResponse(
-                success=False,
-                message="Your password is wrong",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Your password is wrong",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         token = create_access_token(data={"sub": str(user.user_id)})
         expires_in = 36000  # 10 hours
 
-        return GenericResponse(
-            success=True,
-            data={
-                "access_token": token,
-                "expires_in": expires_in,
-                "user": {
-                    "user_id": user.user_id,
-                    "email": user.email,
-                    "username": user.username,
-                    "profile_picture": user.profile_picture
-                }
-            },
-            message="Login successful",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data={
+                    "access_token": token,
+                    "expires_in": expires_in,
+                    "user": {
+                        "user_id": user.user_id,
+                        "email": user.email,
+                        "username": user.username,
+                        "profile_picture": user.profile_picture
+                    }
+                },
+                message="Login successful",
+                timestamp=datetime.utcnow()
+            ))
         )
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            message="An error occured",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An error occurred",
+                timestamp=datetime.utcnow()
+            ))
         )
 
 
 @router.post("/logout", response_model=GenericResponse)
 def logout(token: str = Depends(logout_user)):
     """Logout user by invalidating the token."""
-    
     try:
-        return GenericResponse(
-            success=True,
-            data=None,
-            message="Logged out successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=None,
+                message="Logged out successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            message=f"Failed to logout",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="Failed to logout",
+                timestamp=datetime.utcnow()
+            ))
         )
