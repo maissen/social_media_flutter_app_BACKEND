@@ -135,7 +135,7 @@
                 <div class="profile-avatar-wrapper">
                     <img id="profileModalAvatar" src="https://via.placeholder.com/120" alt="Profile Picture" class="profile-avatar">
                     <input type="file" id="profilePictureInput" accept="image/*" class="hidden-file-input">
-                    <button class="btn-upload" onclick="document.getElementById('profilePictureInput').click()">Change</button>
+                    <button id="btnChangeProfilePic" class="btn-upload" onclick="document.getElementById('profilePictureInput').click()">Change</button>
                 </div>
                 <div class="profile-header-info">
                     <h2 id="profileModalUsername">Username</h2>
@@ -167,9 +167,7 @@
             </div>
 
             <!-- Profile Actions -->
-            <div id="profileModalActions" class="profile-actions">
-                <!-- Follow / Unfollow button dynamically injected -->
-            </div>
+            <div id="profileModalActions" class="profile-actions"></div>
 
             <!-- User Posts List -->
             <div id="profilePostsList" class="profile-posts">
@@ -177,6 +175,7 @@
             </div>
         </div>
     </div>
+
 
 
 
