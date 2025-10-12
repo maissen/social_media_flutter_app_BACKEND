@@ -12,7 +12,7 @@ from src.core.security import get_current_user_from_token
 
 
 # Directory where uploaded media will be stored
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/")
+UPLOAD_DIR = os.getenv("UPLOAD_DIR")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Prefix for filenames
@@ -59,7 +59,7 @@ async def create_post(
             with open(file_path, "wb") as buffer:
                 buffer.write(await media_file.read())
 
-            media_url = f"{UPLOAD_FILES_PREFIX}/{UPLOAD_DIR}/{file_name}"
+            media_url = f"{UPLOAD_FILES_PREFIX}{UPLOAD_DIR}{file_name}"
 
         new_post = PostSchema(
             post_id=post_id,
