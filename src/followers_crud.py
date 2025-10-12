@@ -133,16 +133,24 @@ def get_followings_of_user(user_id: int) -> List[UserProfileSchema]:
     following_ids = [following_id for (follower_id, following_id) in followers_list if follower_id == user_id]
 
     # Build response with minimal info (UserSearchedSchema)
-    following_data: List[UserSearchedSchema] = []
+    following_data: List[UserProfileSchema] = []
+
     for fid in following_ids:
         user = get_user_by_id(fid)
         if user:
-            following_data.append(UserSearchedSchema(
+            following_data.append(UserProfileSchema(
                 user_id=user.user_id,
-                username=user.username,
                 email=user.email,
-                profile_picture=user.profile_picture
+                username=user.username,
+                bio=user.bio,
+                profile_picture=user.profile_picture,
+                followers_count=user.followers_count,
+                following_count=user.following_count,
+                posts_count=user.posts_count,
+                created_at=user.created_at,
+                is_following=check_following_status(user_1=user_id, user_2=fid)
             ))
+            
     return following_data
 
 
