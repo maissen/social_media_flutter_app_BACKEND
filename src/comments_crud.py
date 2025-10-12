@@ -25,39 +25,12 @@ def get_new_comment_id() -> int:
         return 1
     return max(comment.comment_id for comment in comments) + 1
 
-def create_comment(current_user, post_id: int, content: str) -> CommentProfile:
-    comments = load_comments()
-    comment = CommentProfile(
-        comment_id=get_new_comment_id(),
-        post_id=post_id,
-        user_id=current_user.user_id,
-        username=current_user.username,
-        profile_picture=getattr(current_user, "profile_picture", ""),
-        comment_payload=content,
-        created_at=datetime.utcnow(),
-        likes_nbr=0
-    )
-    comments.append(comment)
-    save_comments(comments)
-    return comment
 
 def get_comments_of_post(post_id: int) -> List[CommentProfile]:
     comments = load_comments()
     
     return [c for c in comments if c.post_id == post_id]
 
-def delete_comment_of_post(comment_id: int, post_id: int) -> bool:
-    comments = load_comments()
-    updated_comments = [c for c in comments if not (c.comment_id == comment_id and c.post_id == post_id)]
-    if len(updated_comments) == len(comments):
-        return False
-    save_comments(updated_comments)
-    
-    # Remove likes related to this comment
-    likes = load_likes()
-    likes = [like for like in likes if like[0] != comment_id]
-    save_likes(likes)
-    return True
 
 
 # ---------- Likes DB ----------
@@ -83,7 +56,7 @@ def like_comment_of_post(comment_id: int, user_id: int) -> bool:
     if (comment_id, user_id) in likes:
         return False
 
-    comment = next((c for c in comments if c.comment_id == comment_id), None)
+    comment = get_comment_by_id(comment_id)
     if not comment:
         return False
 
