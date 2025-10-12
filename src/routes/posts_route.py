@@ -352,7 +352,7 @@ def toggle_like_comment(
     try:
         comment = get_comment_by_id(comment_id=comment_id)
 
-        if not comment:
+        if comment is None:
             return GenericResponse(
                 success=False,
                 message="Comment is not found",
@@ -413,7 +413,7 @@ def get_comments(
     Does not include likes or is_liked_by_me.
     """
     try:
-        comments: List[CommentProfile] = get_comments_of_post(post_id)
+        comments: List[CommentProfile] = get_comments_of_post(post_id, current_user_id=current_user.user_id)
 
         return GenericResponse(
             success=True,
