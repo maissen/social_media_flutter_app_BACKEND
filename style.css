@@ -809,7 +809,7 @@ body {
     height: 120px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid #667eea;
+    border: 2px solid #667eea;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
@@ -819,7 +819,7 @@ body {
 
 .btn-upload {
     position: absolute;
-    bottom: 0;
+    bottom: -5px;
     left: 50%;
     transform: translateX(-50%);
     background: #667eea;
@@ -857,19 +857,25 @@ body {
 
 /* ================== Edit Section ================== */
 .profile-edit-section {
-    display: flex;
+    display: flex !important;
     gap: 12px;
-    align-items: center;
+    align-items: stretch;      /* ensures same height */
+    width: 100%;
+    flex-wrap: nowrap;         /* prevent wrapping */
     margin-top: 12px;
 }
 
 .input-bio {
-    flex: 1;
-    padding: 8px 12px;
+    flex: 7 1 0%;
+    padding: 0 12px;           /* vertical padding = 0, horizontal padding ok */
     border-radius: 20px;
     border: 1px solid #ccc;
     font-size: 14px;
     transition: border 0.3s;
+    display: flex;
+    align-items: center;        /* vertically center text */
+    height: 40px;
+    box-sizing: border-box;
 }
 
 .input-bio:focus {
@@ -878,20 +884,25 @@ body {
 }
 
 .btn-update-bio {
+    flex: 3 1 0%;
     background: #667eea;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
     font-size: 14px;
     cursor: pointer;
     font-weight: 600;
     transition: background 0.3s;
+    border-radius: 20px;
+    
+    /* Force same height as input */
+    height: 40px;
+    padding: 0 16px;           /* only horizontal padding */
+    line-height: 40px;          /* vertically center text */
+    box-sizing: border-box;
 }
 
-.btn-update-bio:hover {
-    background: #5568d3;
-}
+
+
 
 /* ================== Profile Stats ================== */
 .profile-stats {
@@ -1014,3 +1025,5 @@ body {
     font-size: 14px;
     color: #65676b;
 }
+
+
