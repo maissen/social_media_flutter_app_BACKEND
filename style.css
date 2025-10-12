@@ -1027,3 +1027,58 @@ body {
 }
 
 
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.btn-follow,
+.btn-unfollow {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-follow {
+  background-color: #1da1f2;
+  color: white;
+  border: none;
+}
+
+.btn-unfollow {
+  background-color: #eee;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+
+.btn-follow,
+.btn-unfollow {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-follow {
+  background-color: #1da1f2;
+  color: white;
+  border: none;
+}
+
+.btn-follow:hover {
+  background-color: #0d8ae0;
+}
+
+.btn-unfollow {
+  background-color: #eee;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.btn-unfollow:hover {
+  background-color: #ddd;
+}

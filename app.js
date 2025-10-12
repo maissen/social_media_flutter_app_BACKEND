@@ -623,11 +623,11 @@ async function showProfileModal(profileUserId, profileData) {
 
     const isOwner = currentUserData.user_id === profileUserId;
 
-    // Show/hide "Change" button and bio edit section
+    // Show/hide Change and Bio edit
     document.getElementById('btnChangeProfilePic').style.display = isOwner ? 'block' : 'none';
     document.getElementById('profileEditSection').style.display = isOwner ? 'flex' : 'none';
 
-    // Fill profile info
+    // Fill basic profile info
     document.getElementById('profileModalUsername').textContent = profileData.username;
     document.getElementById('profileModalEmail').textContent = profileData.email;
     document.getElementById('profileModalBio').textContent = profileData.bio || 'No bio yet';
@@ -635,6 +635,24 @@ async function showProfileModal(profileUserId, profileData) {
     document.getElementById('profileModalPosts').textContent = profileData.posts_count || 0;
     document.getElementById('profileModalFollowers').textContent = profileData.followers_count || 0;
     document.getElementById('profileModalFollowing').textContent = profileData.following_count || 0;
+
+    // Follow / Unfollow button
+    const actionsDiv = document.getElementById('profileModalActions');
+    if (!isOwner) {
+        if (profileData.is_following) {
+            actionsDiv.innerHTML = `
+                <button class="btn-unfollow" onclick="toggleFollow(${profileUserId}, true)">Unfollow</button>
+            `;
+        } else {
+            actionsDiv.innerHTML = `
+                <button class="btn-follow" onclick="toggleFollow(${profileUserId}, false)">Follow</button>
+            `;
+        }
+    } else {
+        actionsDiv.innerHTML = '';
+    }
+
+
 
     // Load posts
     const postsList = document.getElementById('profilePostsList');
@@ -661,6 +679,7 @@ async function showProfileModal(profileUserId, profileData) {
         postsList.innerHTML = '<div class="empty-state"><h3>Error loading posts</h3></div>';
     }
 }
+
 
 
 
@@ -696,28 +715,44 @@ async function loadUserPosts(userId) {
     }
 }
 
-async function toggleFollow(userId, button) {
+// Toggle follow/unfollow state
+async function toggleFollow(profileUserId, currentlyFollowing) {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/follow-unfollow/?target_user_id=${userId}`, {
-            method: 'POST',
-            headers: getAuthHeaders()
+        const response = await fetch(`${API_BASE_URL}/users/follow-unfollow?target_user_id=${profileUserId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
         });
 
         const data = await response.json();
 
-        if (data.success && data.data) {
-            const isFollowing = data.data.is_following;
-            button.className = `btn-follow ${isFollowing ? 'following' : ''}`;
-            button.textContent = isFollowing ? 'Unfollow' : 'Follow';
-            loadUserProfile();
+        if (data.success) {
+            const btn = document.querySelector('#profileModalActions button');
+            const followersCount = document.getElementById('profileModalFollowers');
 
-            const currentFollowers = parseInt(document.getElementById('profileModalFollowers').textContent);
-            document.getElementById('profileModalFollowers').textContent = isFollowing ? currentFollowers + 1 : currentFollowers - 1;
+            // Update button & followers count immediately
+            if (currentlyFollowing) {
+                btn.textContent = 'Follow';
+                btn.className = 'btn-follow';
+                btn.setAttribute('onclick', `toggleFollow(${profileUserId}, false)`);
+                followersCount.textContent = Math.max(0, parseInt(followersCount.textContent) - 1);
+            } else {
+                btn.textContent = 'Unfollow';
+                btn.className = 'btn-unfollow';
+                btn.setAttribute('onclick', `toggleFollow(${profileUserId}, true)`);
+                followersCount.textContent = parseInt(followersCount.textContent) + 1;
+            }
+        } else {
+            alert(data.message || 'Failed to update follow status.');
         }
-    } catch (error) {
-        console.error('Error toggling follow:', error);
+    } catch (err) {
+        console.error('Error following/unfollowing:', err);
+        alert('Network error. Please try again.');
     }
 }
+
 
 async function viewFollowers() {
     if (!currentProfileUserId) return;
