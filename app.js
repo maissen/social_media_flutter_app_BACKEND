@@ -420,7 +420,7 @@ async function postComment(postId) {
 
 async function toggleCommentLike(commentId, postId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/posts/comments/like-deslike/${commentId}`, {
+        const response = await fetch(`${API_BASE_URL}/posts/comments/like-deslike?comment_id=${parseInt(commentId)}`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
