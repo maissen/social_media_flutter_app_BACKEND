@@ -305,7 +305,7 @@ def create_new_comment(
         )
     
 
-@router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_200_OK)
+@router.delete("/comments/delete", response_model=GenericResponse, status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(
     comment_id: int = Query(..., description="ID of the comment to delete"),
     post_id: int = Query(..., description="ID of the post the comment belongs to"),
@@ -385,12 +385,10 @@ def toggle_like_comment(
                 timestamp=datetime.utcnow()
             )
 
+        comment.is_liked_by_me = is_comment_liked_by_me(comment_id, user_id)
         return GenericResponse(
             success=True,
-            data={
-                "is_liked": is_comment_liked_by_me(comment_id=comment_id, user_id=current_user.user_id),
-                "likes_nbr": comment.likes_nbr
-            },
+            data=comment,
             message=f"Comment {action} successfully",
             timestamp=datetime.utcnow()
         )
