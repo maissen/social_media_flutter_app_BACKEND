@@ -48,7 +48,7 @@ async def update_profile_picture(
 
         return GenericResponse(
             success=True,
-            data={"file_url": file_url},
+            data={"profile_picture_url": file_url},
             message="Profile picture updated successfully",
             timestamp=datetime.utcnow()
         )
