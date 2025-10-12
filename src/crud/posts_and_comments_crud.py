@@ -96,13 +96,16 @@ def is_post_liked_by_me(user_id: int, post_id: int) -> bool:
 
 
 def like_post(user_id: int, post_id: int) -> bool:
-    likes = load_data_from_dat_file(LIKES_DB)
+
     if is_post_liked_by_me(user_id, post_id):
         return False
+    
+    likes = load_data_from_dat_file(LIKES_DB)
     likes.append((user_id, post_id))
     save_data_to_dat_file(LIKES_DB, likes)
-    if increment_likes_count_of_post(post_id=post_id):
-        return True
+
+    increment_likes_count_of_post(post_id=post_id)
+    return True
 
 
 def dislike_post(user_id: int, post_id: int) -> bool:
