@@ -3,6 +3,9 @@ import shutil
 from typing import List
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from datetime import datetime
+
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.crud.users_crud import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username, check_following_status, follow, get_followers_of_user, get_followings_of_user, unfollow
@@ -17,17 +20,17 @@ UPLOAD_FILE_PREFIX = "url"
 def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_token)):
     """Get user profile by user ID. Requires a valid JWT token."""
     try:
-        # The logged-in user is `current_user`
         user = get_user_by_id(user_id)
-        
         if not user:
-            return GenericResponse(
-                success=False,
-                message="User not found",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="User not found",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
-        # Convert UserSchema to UserProfileSchema
         user_profile = UserProfileSchema(
             user_id=user.user_id,
             email=user.email,
@@ -41,59 +44,70 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
             is_following=user.is_following
         )
 
-        return GenericResponse(
-            success=True,
-            data=user_profile,
-            message="User profile retrieved successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=user_profile,
+                message="User profile retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
     
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed",
-            timestamp=datetime.utcnow()
-        )  
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
 
 @router.put("/update/bio", response_model=GenericResponse)
 def update_user_bio(
     payload: UpdateBioRequest,
     current_user=Depends(get_current_user_from_token)
 ):
-    
     """Update user bio."""
     try:
         if not current_user:
-            return GenericResponse(
-                success=False,
-                data=None,
-                message="User not found",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    data=None,
+                    message="User not found",
+                    timestamp=datetime.utcnow()
+                ))
             )
         
-        # Update the bio
         update_user_bio(user_id=current_user.user_id, payload=payload.new_bio)
         
-        return GenericResponse(
-            success=True,
-            data={
-                "new_bio": payload.new_bio
-            },
-            message="Bio updated successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data={"new_bio": payload.new_bio},
+                message="Bio updated successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
     
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed",
+                timestamp=datetime.utcnow()
+            ))
         )
-
 
 
 @router.post("/update-profile-picture", response_model=GenericResponse, status_code=status.HTTP_200_OK)
@@ -103,47 +117,51 @@ async def update_profile_picture(
 ):
     """
     Upload a new profile picture for the current user.
-    The image file is saved to the server in `static/uploads/profile_pictures/`.
     """
-
     try:
-        # Validate file type (only images)
         if not file.content_type.startswith("image/"):
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file type. Only image files are allowed."
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Invalid file type. Only image files are allowed.",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
-        # Create a unique filename
         filename = f"user_{current_user.user_id}_{int(datetime.utcnow().timestamp())}_{file.filename}"
         file_path = os.path.join(UPLOAD_DIR, filename)
 
-        # Save file to disk
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Example: you might update the user's profile picture in DB here
-        # update_user_profile_picture(current_user.id, filename)
-
-        file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"  # if served by StaticFiles (e.g., app.mount("/static", StaticFiles(...)))
+        file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"
 
         update_user_profile_picture(file=file_url, user_id=current_user.user_id)
 
-        return GenericResponse(
-            success=True,
-            data={"file_url": file_url},
-            message="Profile picture updated successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data={"file_url": file_url},
+                message="Profile picture updated successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(f"Error updating profile picture: {e}")
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to upload profile picture",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to upload profile picture",
+                timestamp=datetime.utcnow()
+            ))
         )
+
 
     
 
