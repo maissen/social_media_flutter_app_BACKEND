@@ -110,7 +110,7 @@ def update_bio(
         )
 
 
-@router.post("/update-profile-picture", response_model=GenericResponse, status_code=status.HTTP_200_OK)
+@router.put("/update-profile-picture", response_model=GenericResponse, status_code=status.HTTP_200_OK)
 async def update_profile_picture(
     file: UploadFile = File(..., description="Profile picture to upload"),
     current_user=Depends(get_current_user_from_token)
