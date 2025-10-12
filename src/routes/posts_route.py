@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from src.crud.users_crud import get_simplified_user_obj_by_id
 from src.crud.posts_and_comments_crud import add_comment_to_post, get_all_likes_of_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
 from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
@@ -592,6 +593,13 @@ def get_comments(
     """
     try:
         comments: List[CommentProfile] = get_comments_of_post(post_id, current_user_id=current_user.user_id)
+
+        #? add user object to each comment
+        for item in comments:
+            comment_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
+
+            if comment_owner is not None:
+                item.user = comment_owner
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

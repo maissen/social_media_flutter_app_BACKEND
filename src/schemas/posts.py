@@ -1,11 +1,13 @@
 from datetime import datetime
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
+from src.schemas.users import UserProfileSimplified
 
 class CommentProfile(BaseModel):
     comment_id: int
     post_id: int
     user_id: int
+    user: Optional[UserProfileSimplified]
     username: str
     profile_picture: Optional[str] = ""
     comment_payload: str
@@ -20,6 +22,7 @@ class CommentProfile(BaseModel):
 class PostSchema(BaseModel):
     post_id: int
     user_id: int
+    user: Optional[UserProfileSimplified]
     content: str
     media_url: Optional[str] = ""
     created_at: datetime
