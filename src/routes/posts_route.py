@@ -1,7 +1,9 @@
 import os
 from datetime import datetime
 from typing import List
-from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status
+from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status, HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from src.crud.posts_and_comments_crud import add_comment_to_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
 from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
@@ -35,10 +37,13 @@ async def create_post(
     """
     try:
         if content.strip() == "" and media_file is None:
-            return GenericResponse(
-                success=False,
-                message="Please add content or a media file to your post.",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Please add content or a media file to your post.",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         # Determine post_id before saving file
@@ -50,11 +55,11 @@ async def create_post(
             file_name = f"post_{post_id}{file_ext}"
             file_path = os.path.join(UPLOAD_DIR, file_name)
 
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
             with open(file_path, "wb") as buffer:
                 buffer.write(await media_file.read())
 
-            # URL or relative path for access
-            media_url = f"{UPLOAD_FILES_PREFIX}/{UPLOAD_DIR}{file_name}"
+            media_url = f"{UPLOAD_FILES_PREFIX}/{UPLOAD_DIR}/{file_name}"
 
         new_post = PostSchema(
             post_id=post_id,
@@ -69,20 +74,26 @@ async def create_post(
 
         create_new_post(new_post)
 
-        return GenericResponse(
-            success=True,
-            data=new_post,
-            message="Post created successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=new_post,
+                message="Post created successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print("Error creating post:", e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to create post",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to create post",
+                timestamp=datetime.utcnow()
+            ))
         )
 
 
@@ -95,20 +106,27 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
     """
     try:
         posts = get_posts_of_user(current_user_id=current_user.user_id, target_user_id=user_id)
-        return GenericResponse(
-            success=True,
-            data=posts,
-            message=f"posts received successfully",
-            timestamp=datetime.utcnow()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=posts,
+                message="Posts received successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="Failed to retrieve posts",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to retrieve posts",
+                timestamp=datetime.utcnow()
+            ))
         )
     
 
@@ -123,42 +141,69 @@ def update_post(
     Update the content of a post.
     Only the user who created the post can update it.
     """
-    post = get_post_by_id(post_id)
-    if not post:
-        return GenericResponse(
-            success=False,
-            message="couldn't find post",
-            timestamp=datetime.utcnow()
+    try:
+        post = get_post_by_id(post_id)
+        if not post:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Couldn't find post",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        if post.user_id != current_user.user_id:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You need to be the owner of the post in order to update it",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        if payload.new_content.strip() == "":
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Please provide the new text to update post",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        updated_post = update_a_post(post_id, payload.new_content)
+        if not updated_post:
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to update post",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data={"new_content": updated_post.bio},
+                message="Post updated successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
-    if post.user_id != current_user.user_id:
-        return GenericResponse(
-            success=False,
-            message="You need to be the owner of the post in order to update it",
-            timestamp=datetime.utcnow()
+    except Exception as e:
+        print("Error updating post:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An error occurred while updating the post",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
-    if payload.new_content == "": 
-        return GenericResponse(
-            success=False,
-            message="Please provide the new text to update post",
-            timestamp=datetime.utcnow()
-        )
-
-    updated_post = update_a_post(post_id, payload.new_content)
-    if not updated_post:
-        return GenericResponse(
-            success=False,
-            message="Failed to update post",
-            timestamp=datetime.utcnow()
-        )
-
-    return GenericResponse(
-        success=True,
-        data={"new_content": updated_post.bio},
-        message="Post updated successfully",
-        timestamp=datetime.utcnow()
-    )
 
 
 
@@ -174,40 +219,56 @@ def delete_post(
     try:
         post = get_post_by_id(post_id)
         if not post:
-            return GenericResponse(
-                success=False,
-                message="Post not found",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Post not found",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         if post.user_id != current_user.user_id:
-            return GenericResponse(
-                success=False,
-                message="You are not allowed to delete this post",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You are not allowed to delete this post",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         success = delete_a_post(post_id)
         if success:
-            return GenericResponse(
-                success=True,
-                message="Post deleted successfully",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=jsonable_encoder(GenericResponse(
+                    success=True,
+                    message="Post deleted successfully",
+                    timestamp=datetime.utcnow()
+                ))
             )
         else:
-            return GenericResponse(
-                success=False,
-                message="Failed to delete post",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to delete post",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
     except Exception as e:
-        print(e)
-        return GenericResponse(
-            success=False,
-            message="An unexpected error occurred",
-            timestamp=datetime.utcnow()
+        print("Error deleting post:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An unexpected error occurred",
+                timestamp=datetime.utcnow()
+            ))
         )
+
     
 
 
