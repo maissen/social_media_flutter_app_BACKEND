@@ -594,6 +594,70 @@
             margin-bottom: 15px;
         }
 
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .user-card:hover {
+            background: #f7f8fa;
+        }
+
+        .user-card-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e4e6eb;
+        }
+
+        .user-card-info {
+            flex: 1;
+        }
+
+        .user-card-name {
+            font-weight: 600;
+            color: #050505;
+            font-size: 15px;
+        }
+
+        .user-card-bio {
+            font-size: 13px;
+            color: #65676b;
+            margin-top: 4px;
+        }
+
+        .btn-follow {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-follow:hover {
+            background: #5568d3;
+        }
+
+        .btn-follow.following {
+            background: #e4e6eb;
+            color: #050505;
+        }
+
+        .btn-follow.following:hover {
+            background: #d8dadf;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -677,10 +741,6 @@
                     <label>Password</label>
                     <input type="password" id="registerPassword" placeholder="Create a password">
                 </div>
-                <div class="form-group">
-                    <label>Date of Birth</label>
-                    <input type="date" id="registerDOB">
-                </div>
                 <button class="btn-primary" onclick="register()">Sign Up</button>
                 <div class="auth-switch">
                     Already have an account? <a onclick="showLoginForm()">Log In</a>
@@ -710,7 +770,7 @@
                     <h3 id="sidebarUsername">My Profile</h3>
                     <p id="sidebarBio" style="color: #65676b; font-size: 14px; margin-top: 8px;">Loading...</p>
                     <div class="profile-stats">
-                        <div class="stat">
+                        <div class="stat" style="cursor: pointer;" onclick="viewMyProfile()">
                             <div class="stat-value" id="postsCount">0</div>
                             <div class="stat-label">Posts</div>
                         </div>
@@ -724,10 +784,18 @@
                         </div>
                     </div>
                 </div>
+                <div class="sidebar-card">
+                    <h3>Navigation</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <button class="btn-primary" onclick="loadFeedPage()" style="padding: 10px;">Feed</button>
+                        <button class="btn-primary" onclick="loadExplorePage()" style="padding: 10px;">Explore</button>
+                        <button class="btn-primary" onclick="viewMyProfile()" style="padding: 10px;">My Profile</button>
+                    </div>
+                </div>
             </aside>
 
             <main class="feed-container">
-                <div class="create-post-card">
+                <div class="create-post-card" id="createPostCard">
                     <input type="text" class="create-post-input" placeholder="What's on your mind?" onclick="openCreatePostModal()" readonly>
                 </div>
 
@@ -749,8 +817,56 @@
             </div>
             <div class="modal-body">
                 <textarea id="createPostContent" placeholder="What's on your mind?"></textarea>
-                <input type="text" id="createPostImage" placeholder="Image URL (optional)">
+                <input type="file" id="createPostFile" accept="image/*" style="margin-bottom: 15px;">
                 <button class="btn-primary" onclick="createPost()">Post</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="profileModalUsername">Profile</h2>
+                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img id="profileModalAvatar" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    <h3 id="profileModalName" style="margin-top: 10px;"></h3>
+                    <p id="profileModalEmail" style="color: #65676b; font-size: 14px;"></p>
+                    <p id="profileModalBio" style="color: #050505; margin-top: 10px;"></p>
+                </div>
+                <div class="profile-stats" style="margin-bottom: 20px;">
+                    <div class="stat">
+                        <div class="stat-value" id="profileModalPosts">0</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="profileModalFollowers">0</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="profileModalFollowing">0</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                </div>
+                <div id="profileModalActions" style="margin-bottom: 20px;"></div>
+                <div id="profileModalPosts">
+                    <h3 style="margin-bottom: 15px;">Posts</h3>
+                    <div id="profilePostsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="searchResultsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Search Results</h2>
+                <button class="modal-close" onclick="closeSearchResultsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="searchResultsList"></div>
             </div>
         </div>
     </div>

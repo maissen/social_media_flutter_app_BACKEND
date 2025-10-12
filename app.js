@@ -2,6 +2,7 @@ const API_BASE_URL = 'http://localhost:8000';
 
 let authToken = localStorage.getItem('authToken') || null;
 let currentUserData = JSON.parse(localStorage.getItem('currentUser')) || null;
+let currentPage = 'feed';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (authToken && currentUserData) {
@@ -36,9 +37,8 @@ async function register() {
     const email = document.getElementById('registerEmail').value;
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
-    const dateOfBirth = document.getElementById('registerDOB').value;
 
-    if (!email || !username || !password || !dateOfBirth) {
+    if (!email || !username || !password) {
         showAuthMessage('Please fill in all fields', true);
         return;
     }
@@ -50,14 +50,13 @@ async function register() {
             body: JSON.stringify({
                 email,
                 username,
-                password,
-                date_of_birth: dateOfBirth
+                password
             })
         });
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (data.success) {
             showAuthMessage('Registration successful! Please log in.');
             showLoginForm();
         } else {
@@ -86,7 +85,7 @@ async function login() {
 
         const data = await response.json();
 
-        if (response.ok && data.data && data.data.access_token) {
+        if (data.success && data.data && data.data.access_token) {
             authToken = data.data.access_token;
             currentUserData = data.data.user;
             localStorage.setItem('authToken', authToken);
@@ -132,7 +131,7 @@ function showApp() {
 
     updateNavbar();
     loadUserProfile();
-    loadFeed();
+    loadFeedPage();
 }
 
 function updateNavbar() {
@@ -151,7 +150,7 @@ async function loadUserProfile() {
 
         const data = await response.json();
 
-        if (response.ok && data.data) {
+        if (data.success && data.data) {
             document.getElementById('sidebarUsername').textContent = data.data.username;
             document.getElementById('sidebarBio').textContent = data.data.bio || 'No bio yet';
             document.getElementById('postsCount').textContent = data.data.posts_count || 0;
@@ -163,9 +162,42 @@ async function loadUserProfile() {
     }
 }
 
+function loadFeedPage() {
+    currentPage = 'feed';
+    document.getElementById('createPostCard').style.display = 'block';
+    loadFeed();
+}
+
+function loadExplorePage() {
+    currentPage = 'explore';
+    document.getElementById('createPostCard').style.display = 'block';
+    loadExplore();
+}
+
 async function loadFeed() {
     const feedContent = document.getElementById('feedContent');
     feedContent.innerHTML = '<div class="loading">Loading your feed...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/feed/`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            displayFeed(data.data);
+        } else {
+            feedContent.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Follow people to see their posts in your feed</p></div>';
+        }
+    } catch (error) {
+        feedContent.innerHTML = '<div class="empty-state"><h3>Error loading feed</h3><p>Please try again later</p></div>';
+    }
+}
+
+async function loadExplore() {
+    const feedContent = document.getElementById('feedContent');
+    feedContent.innerHTML = '<div class="loading">Loading explore feed...</div>';
 
     try {
         const response = await fetch(`${API_BASE_URL}/feed/explore`, {
@@ -174,10 +206,10 @@ async function loadFeed() {
 
         const data = await response.json();
 
-        if (response.ok && data.data) {
+        if (data.success && data.data && data.data.length > 0) {
             displayFeed(data.data);
         } else {
-            feedContent.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Follow people to see their posts in your feed</p></div>';
+            feedContent.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Be the first to share something!</p></div>';
         }
     } catch (error) {
         feedContent.innerHTML = '<div class="empty-state"><h3>Error loading feed</h3><p>Please try again later</p></div>';
@@ -205,39 +237,40 @@ function createPostCard(post) {
     card.className = 'post-card';
     card.dataset.postId = post.post_id;
 
-    const authorName = post.author ? post.author.username : 'Unknown';
-    const authorAvatar = post.author && post.author.profile_picture ? post.author.profile_picture : 'https://via.placeholder.com/40';
+    const authorName = 'Unknown';
+    const authorAvatar = 'https://via.placeholder.com/40';
     const postTime = formatTime(post.created_at);
-    const isLiked = post.is_liked || false;
-    const likesCount = post.likes_count || 0;
-    const commentsCount = post.comments_count || 0;
+    const isLiked = post.is_liked_by_me || false;
+    const likesCount = post.likes_nbr || 0;
+    const commentsCount = post.comments_nbr || 0;
 
     card.innerHTML = `
         <div class="post-header">
-            <img class="post-avatar" src="${authorAvatar}" alt="${authorName}">
+            <img class="post-avatar" src="${authorAvatar}" alt="${authorName}" onclick="viewProfile(${post.user_id})" style="cursor: pointer;">
             <div class="post-author-info">
-                <div class="post-author-name">${authorName}</div>
+                <div class="post-author-name" onclick="viewProfile(${post.user_id})" style="cursor: pointer;">${authorName}</div>
                 <div class="post-time">${postTime}</div>
             </div>
+            ${post.user_id == currentUserData.user_id ? `<button class="post-menu-btn" onclick="deletePost(${post.post_id})">🗑️</button>` : ''}
         </div>
-        <div class="post-content">${post.content}</div>
+        <div class="post-content">${post.content || ''}</div>
         ${post.media_url ? `<img class="post-image" src="${post.media_url}" alt="Post image">` : ''}
         <div class="post-stats">
             <span>${likesCount} likes</span>
             <span>${commentsCount} comments</span>
         </div>
         <div class="post-actions">
-            <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post.post_id}')">
+            <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.post_id})">
                 ${isLiked ? '❤️' : '🤍'} Like
             </button>
-            <button class="post-action-btn" onclick="toggleComments('${post.post_id}')">
+            <button class="post-action-btn" onclick="toggleComments(${post.post_id})">
                 💬 Comment
             </button>
         </div>
         <div class="comments-section" id="comments-${post.post_id}">
             <div class="comment-input-wrapper">
                 <input type="text" class="comment-input" id="comment-input-${post.post_id}" placeholder="Write a comment...">
-                <button class="btn-comment" onclick="postComment('${post.post_id}')">Post</button>
+                <button class="btn-comment" onclick="postComment(${post.post_id})">Post</button>
             </div>
             <div id="comments-list-${post.post_id}">
                 <div class="loading">Loading comments...</div>
@@ -273,17 +306,16 @@ async function toggleLike(postId) {
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (data.success && data.data) {
             const postCard = document.querySelector(`[data-post-id="${postId}"]`);
             const likeBtn = postCard.querySelector('.post-action-btn');
-            const isLiked = data.data.is_liked;
+            const isLiked = data.data.is_liked_by_me;
 
             likeBtn.classList.toggle('liked', isLiked);
             likeBtn.innerHTML = `${isLiked ? '❤️' : '🤍'} Like`;
 
             const statsDiv = postCard.querySelector('.post-stats span:first-child');
-            const currentLikes = parseInt(statsDiv.textContent);
-            statsDiv.textContent = `${isLiked ? currentLikes + 1 : currentLikes - 1} likes`;
+            statsDiv.textContent = `${data.data.likes_nbr} likes`;
         }
     } catch (error) {
         console.error('Error toggling like:', error);
@@ -313,7 +345,7 @@ async function loadComments(postId) {
 
         const data = await response.json();
 
-        if (response.ok && data.data && data.data.length > 0) {
+        if (data.success && data.data && data.data.length > 0) {
             commentsList.innerHTML = '';
             data.data.forEach(comment => {
                 const commentEl = createCommentElement(comment);
@@ -345,9 +377,10 @@ function createCommentElement(comment) {
         </div>
         <div class="comment-content">${comment.comment_payload}</div>
         <div class="comment-actions">
-            <span class="comment-action ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike('${comment.comment_id}')">
+            <span class="comment-action ${isLiked ? 'liked' : ''}" onclick="toggleCommentLike(${comment.comment_id}, ${comment.post_id})">
                 ${isLiked ? '❤️' : '🤍'} ${likesCount} Like${likesCount !== 1 ? 's' : ''}
             </span>
+            ${comment.user_id == currentUserData.user_id ? `<span class="comment-action" onclick="deleteComment(${comment.comment_id}, ${comment.post_id})">Delete</span>` : ''}
         </div>
     `;
 
@@ -381,7 +414,7 @@ async function postComment(postId) {
     }
 }
 
-async function toggleCommentLike(commentId) {
+async function toggleCommentLike(commentId, postId) {
     try {
         const response = await fetch(`${API_BASE_URL}/posts/comments/like-deslike/${commentId}`, {
             method: 'POST',
@@ -390,10 +423,10 @@ async function toggleCommentLike(commentId) {
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (data.success && data.data) {
             const commentEl = document.querySelector(`[data-comment-id="${commentId}"]`);
             const likeAction = commentEl.querySelector('.comment-action');
-            const isLiked = data.data.is_liked;
+            const isLiked = data.data.is_liked_by_me;
             const likesCount = data.data.likes_nbr || 0;
 
             likeAction.classList.toggle('liked', isLiked);
@@ -404,6 +437,51 @@ async function toggleCommentLike(commentId) {
     }
 }
 
+async function deleteComment(commentId, postId) {
+    if (!confirm('Delete this comment?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/comments/delete?comment_id=${commentId}&post_id=${postId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            await loadComments(postId);
+            const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+            const statsDiv = postCard.querySelector('.post-stats span:last-child');
+            const currentCount = parseInt(statsDiv.textContent);
+            statsDiv.textContent = `${currentCount - 1} comments`;
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+    }
+}
+
+async function deletePost(postId) {
+    if (!confirm('Delete this post?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/delete/${postId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            if (currentPage === 'feed') {
+                loadFeed();
+            } else if (currentPage === 'explore') {
+                loadExplore();
+            } else {
+                viewProfile(currentUserData.user_id);
+            }
+            loadUserProfile();
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+    }
+}
+
 function openCreatePostModal() {
     document.getElementById('createPostModal').classList.add('active');
 }
@@ -411,33 +489,39 @@ function openCreatePostModal() {
 function closeCreatePostModal() {
     document.getElementById('createPostModal').classList.remove('active');
     document.getElementById('createPostContent').value = '';
-    document.getElementById('createPostImage').value = '';
+    document.getElementById('createPostFile').value = '';
 }
 
 async function createPost() {
     const content = document.getElementById('createPostContent').value.trim();
-    const mediaUrl = document.getElementById('createPostImage').value.trim();
+    const fileInput = document.getElementById('createPostFile');
+    const file = fileInput.files[0];
 
-    if (!content) {
-        alert('Please write something!');
+    if (!content && !file) {
+        alert('Please write something or select an image!');
         return;
     }
 
-    const body = { content };
-    if (mediaUrl) {
-        body.media_url = mediaUrl;
-    }
-
     try {
+        const formData = new FormData();
+        if (content) formData.append('content', content);
+        if (file) formData.append('media_file', file);
+
         const response = await fetch(`${API_BASE_URL}/posts/create`, {
             method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(body)
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: formData
         });
 
         if (response.ok) {
             closeCreatePostModal();
-            loadFeed();
+            if (currentPage === 'feed') {
+                loadFeed();
+            } else if (currentPage === 'explore') {
+                loadExplore();
+            }
             loadUserProfile();
         } else {
             alert('Failed to create post');
@@ -460,13 +544,145 @@ async function handleSearch(event) {
 
             const data = await response.json();
 
-            if (response.ok && data.data) {
-                alert(`Found user: ${data.data.username}\nFollowers: ${data.data.followers_count}\nFollowing: ${data.data.following_count}`);
+            if (data.success && data.data && data.data.length > 0) {
+                showSearchResults(data.data);
             } else {
-                alert('User not found');
+                alert('No users found');
             }
         } catch (error) {
             alert('Search error');
         }
+    }
+}
+
+function showSearchResults(users) {
+    const modal = document.getElementById('searchResultsModal');
+    const list = document.getElementById('searchResultsList');
+
+    list.innerHTML = '';
+
+    users.forEach(user => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.onclick = () => {
+            closeSearchResultsModal();
+            viewProfile(user.user_id);
+        };
+
+        userCard.innerHTML = `
+            <img class="user-card-avatar" src="${user.profile_picture || 'https://via.placeholder.com/50'}" alt="${user.username}">
+            <div class="user-card-info">
+                <div class="user-card-name">${user.username}</div>
+                <div class="user-card-bio">${user.bio || 'No bio'}</div>
+            </div>
+        `;
+
+        list.appendChild(userCard);
+    });
+
+    modal.classList.add('active');
+}
+
+function closeSearchResultsModal() {
+    document.getElementById('searchResultsModal').classList.remove('active');
+}
+
+async function viewProfile(userId) {
+    currentPage = 'profile';
+    document.getElementById('createPostCard').style.display = 'none';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/profile/${userId}`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            showProfileModal(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+function viewMyProfile() {
+    viewProfile(currentUserData.user_id);
+}
+
+async function showProfileModal(profile) {
+    document.getElementById('profileModalUsername').textContent = profile.username;
+    document.getElementById('profileModalAvatar').src = profile.profile_picture || 'https://via.placeholder.com/100';
+    document.getElementById('profileModalName').textContent = profile.username;
+    document.getElementById('profileModalEmail').textContent = profile.email;
+    document.getElementById('profileModalBio').textContent = profile.bio || 'No bio yet';
+    document.getElementById('profileModalPosts').textContent = profile.posts_count || 0;
+    document.getElementById('profileModalFollowers').textContent = profile.followers_count || 0;
+    document.getElementById('profileModalFollowing').textContent = profile.following_count || 0;
+
+    const actionsDiv = document.getElementById('profileModalActions');
+    actionsDiv.innerHTML = '';
+
+    if (profile.user_id != currentUserData.user_id) {
+        const followBtn = document.createElement('button');
+        followBtn.className = `btn-follow ${profile.is_following ? 'following' : ''}`;
+        followBtn.textContent = profile.is_following ? 'Unfollow' : 'Follow';
+        followBtn.onclick = () => toggleFollow(profile.user_id, followBtn);
+        actionsDiv.appendChild(followBtn);
+    }
+
+    await loadUserPosts(profile.user_id);
+
+    document.getElementById('profileModal').classList.add('active');
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('active');
+    currentPage = 'feed';
+    document.getElementById('createPostCard').style.display = 'block';
+}
+
+async function loadUserPosts(userId) {
+    const postsList = document.getElementById('profilePostsList');
+    postsList.innerHTML = '<div class="loading">Loading posts...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/posts/${userId}`, {
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            postsList.innerHTML = '';
+            data.data.forEach(post => {
+                const postCard = createPostCard(post);
+                postsList.appendChild(postCard);
+            });
+        } else {
+            postsList.innerHTML = '<div class="empty-state"><h3>No posts yet</h3></div>';
+        }
+    } catch (error) {
+        postsList.innerHTML = '<div class="empty-state"><h3>Error loading posts</h3></div>';
+    }
+}
+
+async function toggleFollow(userId, button) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/follow-unfollow/?target_user_id=${userId}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            const isFollowing = data.data.is_following;
+            button.className = `btn-follow ${isFollowing ? 'following' : ''}`;
+            button.textContent = isFollowing ? 'Unfollow' : 'Follow';
+            loadUserProfile();
+        }
+    } catch (error) {
+        console.error('Error toggling follow:', error);
     }
 }
