@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from src.crud.posts_and_comments_crud import add_comment_to_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
+from src.crud.posts_and_comments_crud import add_comment_to_post, get_all_likes_of_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
 from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
@@ -345,6 +345,52 @@ def like_or_dislike_post(
             detail=jsonable_encoder(GenericResponse(
                 success=False,
                 message="Failed",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+
+
+@router.get("/likes", response_model=GenericResponse)
+def get_likes_of_post(
+    post_id: int = Query(..., description="ID of the post to retrieve likes for"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Retrieve all users who liked a specific post.
+    Requires authentication.
+    """
+    try:
+        post = get_post_by_id(post_id)
+        if not post:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Post not found",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        liked_users = get_all_likes_of_post(post_id, current_user.user_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=liked_users,
+                message=f"{len(liked_users)} users liked this post",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+    except Exception as e:
+        print("Error retrieving likes of post:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="Failed to retrieve likes of post",
                 timestamp=datetime.utcnow()
             ))
         )
