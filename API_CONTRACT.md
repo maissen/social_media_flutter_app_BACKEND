@@ -374,19 +374,27 @@ Development: http://localhost:8000/v1
 - `Authorization: Bearer <token>`
 - `Content-Type: multipart/form-data` (for media uploads)
 
-**Request Body :**
-```json
-{
-  "content": "This is my post content",
-  "media_url": "https://storage.com/image1.jpg",
-}
-```
+**Request Body (multipart/form-data):**
+
+| Field      | Type        | Description                                    |
+|------------|------------|------------------------------------------------|
+| content    | string     | Text content of the post (optional if media_file is provided) |
+| media_file | file       | Optional media file to upload (image/video)   |
 
 **Response:** `201 Created`
 ```json
 {
   "success": true,
-  "data": null,
+  "data": {
+    "post_id": 7,
+    "user_id": 4,
+    "content": "hello world",
+    "media_url": "http://something.com/image.jpg",
+    "created_at": "2025-10-06T10:30:00Z",
+    "likes_nbr": 0,
+    "comments_nbr": 0,
+    "is_liked_by_me": false
+  },
   "message": "Post created successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }
@@ -396,7 +404,7 @@ Development: http://localhost:8000/v1
 ```json
   {
     "success": false,
-    "message": "Failed ",
+    "message": "Failed to create post",
     "timestamp": "2025-10-06T10:30:00Z"
   }
 ```
@@ -414,8 +422,8 @@ Development: http://localhost:8000/v1
   "success": true,
   "data": [
     {
-      "post_id": "v4",
-      "user_id": "v1",
+      "post_id": 7,
+      "user_id": 1,
       "content": "This is my post content",
       "media_url": "https://storage.com/image1.jpg",
       "created_at": "2025-10-06T10:30:00Z",
@@ -433,7 +441,7 @@ Development: http://localhost:8000/v1
 ```json
   {
     "success": false,
-    "message": "Failed ",
+    "message": "Failed to retrieve posts",
     "timestamp": "2025-10-06T10:30:00Z"
   }
 ```
@@ -456,7 +464,7 @@ Development: http://localhost:8000/v1
 {
   "success": true,
   "data": {
-    "content": "Updated content",
+    "new_content": "Updated content",
   },
   "message": "Post updated successfully",
   "timestamp": "2025-10-06T10:35:00Z"
@@ -478,7 +486,14 @@ Development: http://localhost:8000/v1
 
 **Headers:** `Authorization: Bearer <token>`
 
-**Response:** `204 No Content`
+**Response:** `success`
+```json
+  {
+    "success": true,
+    "message": "post deleted successfully",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
 
 ---
 
@@ -492,8 +507,15 @@ Development: http://localhost:8000/v1
 {
   "success": true,
   "data": {
-    "is_liked": true/false,
-  },
+      "post_id": 7,
+      "user_id": 1,
+      "content": "This is my post content",
+      "media_url": "https://storage.com/image1.jpg",
+      "created_at": "2025-10-06T10:30:00Z",
+      "likes_nbr": 42,
+      "comments_nbr": 15,
+      "is_liked_by_me": false/false,
+    },
   "message": "Post liked/desliked successfully",
   "timestamp": "2025-10-06T10:30:00Z"
 }

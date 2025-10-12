@@ -155,7 +155,7 @@ def update_post(
 
     return GenericResponse(
         success=True,
-        data=updated_post,
+        data={"new_content": updated_post.bio},
         message="Post updated successfully",
         timestamp=datetime.utcnow()
     )
@@ -247,11 +247,13 @@ def like_or_dislike_post(
                 message="Failed to like/dislike post",
                 timestamp=datetime.utcnow()
             )
-    
+        
+        post.is_liked_by_me = is_liked
+            
         if is_liked:
             return GenericResponse(
                 success=True,
-                data={"is_liked": is_liked},
+                data=post,
                 message="Post is liked successfully",
                 timestamp=datetime.utcnow()
             )
