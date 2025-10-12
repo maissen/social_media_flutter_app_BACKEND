@@ -464,21 +464,26 @@ def toggle_like_comment(
     """
     Like a comment if not liked; otherwise, remove like (dislike).
     """
-
     try:
         comment = get_comment_by_id(comment_id=comment_id)
-
         if comment is None:
-            return GenericResponse(
-                success=False,
-                message="Comment is not found",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Comment is not found",
+                    timestamp=datetime.utcnow()
+                ))
             )
-    except:
-        return GenericResponse(
-            success=False,
-            message="An error occured while looking for the comment",
-            timestamp=datetime.utcnow()
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                message="An error occurred while looking for the comment",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     try:
@@ -486,38 +491,45 @@ def toggle_like_comment(
         already_liked = is_comment_liked_by_me(comment_id, user_id)
 
         if already_liked:
-            # User already liked → remove like
             success = dislike_comment_of_post(comment_id, user_id)
             action = "disliked"
         else:
-            # User has not liked → add like
             success = like_comment_of_post(comment_id, user_id)
             action = "liked"
 
         if not success:
-            return GenericResponse(
-                success=False,
-                message="Failed to like/dislike comment",
-                timestamp=datetime.utcnow()
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="Failed to like/dislike comment",
+                    timestamp=datetime.utcnow()
+                ))
             )
 
         comment.is_liked_by_me = is_comment_liked_by_me(comment_id, user_id)
-        return GenericResponse(
-            success=True,
-            data=comment,
-            message=f"Comment {action} successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=comment,
+                message=f"Comment {action} successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=None,
-            message="An unexpected error occurred",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="An unexpected error occurred",
+                timestamp=datetime.utcnow()
+            ))
         )
-    
+
 
 @router.get("/comments/all", response_model=GenericResponse)
 def get_comments(
@@ -531,18 +543,24 @@ def get_comments(
     try:
         comments: List[CommentProfile] = get_comments_of_post(post_id, current_user_id=current_user.user_id)
 
-        return GenericResponse(
-            success=True,
-            data=comments,
-            message="Comments retrieved successfully",
-            timestamp=datetime.utcnow()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=comments,
+                message="Comments retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
         )
 
     except Exception as e:
         print(e)
-        return GenericResponse(
-            success=False,
-            data=[],
-            message="Failed to retrieve comments",
-            timestamp=datetime.utcnow()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=[],
+                message="Failed to retrieve comments",
+                timestamp=datetime.utcnow()
+            ))
         )
