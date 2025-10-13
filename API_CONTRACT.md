@@ -215,6 +215,8 @@ Development: http://localhost:8000/v1
 ### 2.4 Search Users
 **GET** /users/search?username=maissen
 
+**Headers:** `Authorization: Bearer <token>`
+
 **Query Parameters:**
 - `username` (required): searched username
 
@@ -630,18 +632,14 @@ Development: http://localhost:8000/v1
       "comment_payload": "Great post!",
       "created_at": "2025-10-06T10:30:00Z",
       "likes_nbr": 5,
-      "is_liked_by_me": false
-    },
-    {
-      "comment_id": 2,
-      "post_id": 1,
-      "user_id": 5,
-      "username": "janedoe",
-      "profile_picture": "https://storage.com/profile2.jpg",
-      "comment_payload": "Nice post!",
-      "created_at": "2025-10-06T10:32:00Z",
-      "likes_nbr": 2,
-      "is_liked_by_me": true
+      "is_liked_by_me": false,
+      "user": {
+        "user_id": 1,
+        "email": "x@gmail.com",
+        "username": "Fadi",
+        "profile_picture": "",
+        "is_following": "false",
+      }
     }
   ],
   "message": "Comments retrieved successfully",

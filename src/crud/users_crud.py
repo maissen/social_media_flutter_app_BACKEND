@@ -84,13 +84,15 @@ def update_user_profile_picture(user_id: int, payload: UpdateProfilePictureReque
     return None  # User not found
 
 def find_matching_username(current_user: int, username: str) -> List[UserSchema]:
-    """Search for users whose username contains the username (case-insensitive)."""
+    """Search for users whose username starts with the search string (case-insensitive)."""
     username = username.lower()
     users = load_users()
-    matching_users = [user for user in users if username in user.username.lower()]
+    matching_users = [
+        user for user in users if user.username.lower().startswith(username)
+    ]
 
     for user in matching_users:
-        user.is_following = check_following_status(user_1=current_user, user_2=user.user_id) 
+        user.is_following = check_following_status(user_1=current_user, user_2=user.user_id)
 
     return matching_users
 
