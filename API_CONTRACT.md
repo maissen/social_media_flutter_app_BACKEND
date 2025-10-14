@@ -527,7 +527,7 @@ Development: http://localhost:8000/v1
 ---
 
 ### 4.6 Delete Post
-**DELETE** `/posts/delete/<post-id>`
+**DELETE** `/posts/delete?post_id=2`
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -710,7 +710,7 @@ Development: http://localhost:8000/v1
 ---
 
 ### 5.4 Like Comment
-**POST** `posts/comments/like-deslike/<comment-id>`
+**POST** `posts/comments/like-deslike?comment_id=2`
 
 **Headers:** `Authorization: Bearer <token>`
 

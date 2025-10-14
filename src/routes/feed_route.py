@@ -45,19 +45,20 @@ async def get_user_feed(current_user=Depends(get_current_user_from_token)):
 
 @router.get("/explore", response_model=GenericResponse, status_code=status.HTTP_200_OK)
 async def get_explore_feed(
-    limit: int = 100,
     current_user=Depends(get_current_user_from_token)
 ):
     """
-    Get the most recent posts from all users (Explore feed).
+    Get the most recent posts from all users (Explore feed), excluding the current user's posts.
     """
     try:
-        posts = load_recent_posts(limit=limit)
+        posts = load_recent_posts()
+
+        # Exclude current user's posts
+        posts = [post for post in posts if post.user_id != current_user.user_id]
 
         #? attach user object with each post
         for item in posts:
             post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
-
             if post_owner is not None:
                 item.user = post_owner
 

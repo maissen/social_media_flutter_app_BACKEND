@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import re
 from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -52,20 +53,28 @@ async def create_post(
 
         media_url = ""
         if media_file:
+
+            # Sanitize filename
+            original_name = os.path.splitext(media_file.filename)[0]
+            clean_name = re.sub(r"[^A-Za-z0-9_-]", "", original_name)
             file_ext = os.path.splitext(media_file.filename)[1]
 
-            # Use current timestamp in seconds for the filename
-            timestamp_seconds = int(datetime.utcnow().timestamp())
-            file_name = f"post_{timestamp_seconds}{file_ext}"
-            
+            # Use timestamp + cleaned filename
+            timestamp = int(datetime.utcnow().timestamp())
+            file_name = f"post_{timestamp}_{clean_name}{file_ext}"
+
+            # Ensure upload directory exists
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
             file_path = os.path.join(UPLOAD_DIR, file_name)
 
-            os.makedirs(UPLOAD_DIR, exist_ok=True)
+            # Save file
             with open(file_path, "wb") as buffer:
                 buffer.write(await media_file.read())
 
-            media_url = f"{UPLOAD_FILES_PREFIX}{UPLOAD_DIR}{file_name}"
+            # Build media URL
+            media_url = f"{UPLOAD_FILES_PREFIX}/{file_name}"
 
+        # Create post object
         new_post = PostSchema(
             post_id=post_id,
             user_id=current_user.user_id,
@@ -100,8 +109,6 @@ async def create_post(
                 timestamp=datetime.utcnow()
             ))
         )
-
-
 
 @router.get("/likes", response_model=GenericResponse)
 def get_likes_of_post(
@@ -162,6 +169,7 @@ def get_user_post(
     """
     try:
         post = get_post_by_id(post_id=post_id)
+        post.is_liked_by_me = is_post_liked_by_me(user_id=current_user.user_id, post_id=post_id)
 
         if not post:
             raise HTTPException(

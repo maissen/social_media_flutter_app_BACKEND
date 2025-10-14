@@ -369,7 +369,7 @@ def load_feed_of_user(user_id: int) -> list[PostSchema]:
     return user_feed_posts
 
 
-def load_recent_posts(limit: int = 20) -> list[PostSchema]:
+def load_recent_posts(limit: int = 2000) -> list[PostSchema]:
     posts = load_posts()
     posts.sort(key=lambda p: p.created_at, reverse=True)
     return posts[:limit]

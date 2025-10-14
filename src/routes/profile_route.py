@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from datetime import datetime
 import os
@@ -26,7 +27,6 @@ async def update_profile_picture(
     The image file is saved to the server in `static/uploads/profile_pictures/`.
     """
     try:
-        # Validate file type (only images)
         if not file.content_type.startswith("image/"):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -37,16 +37,21 @@ async def update_profile_picture(
                 ))
             )
 
-        # Create a unique filename
-        filename = f"user_{current_user.user_id}_{int(datetime.utcnow().timestamp())}_{file.filename}"
         os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+        file_ext = os.path.splitext(file.filename)[1]
+
+        # Remove spaces and other unsafe characters from the original filename
+        clean_name = re.sub(r"[^A-Za-z0-9_-]", "", os.path.splitext(file.filename)[0])
+
+        timestamp = int(datetime.utcnow().timestamp())
+        filename = f"user_{timestamp}_{clean_name}{file_ext}"
         file_path = os.path.join(UPLOAD_DIR, filename)
 
-        # Save file to disk
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        file_url = f"{UPLOAD_FILE_PREFIX}/{file_path}"
+        file_url = f"{UPLOAD_FILE_PREFIX}/{filename}"
 
         update_user_profile_picture(file=file_url, user_id=current_user.user_id)
 
