@@ -38,6 +38,7 @@ async def create_post(
     Accepts optional media uploads (image/video).
     """
     try:
+        # Ensure there is either text content or a file
         if content.strip() == "" and media_file is None:
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -48,18 +49,16 @@ async def create_post(
                 ))
             )
 
-        # Determine post_id before saving file
+        # Determine post ID
         post_id = get_posts_count(user_id=current_user.user_id) + 1
 
         media_url = ""
         if media_file:
-
             # Sanitize filename
             original_name = os.path.splitext(media_file.filename)[0]
             clean_name = re.sub(r"[^A-Za-z0-9_-]", "", original_name)
             file_ext = os.path.splitext(media_file.filename)[1]
 
-            # Use timestamp + cleaned filename
             timestamp = int(datetime.utcnow().timestamp())
             file_name = f"post_{timestamp}_{clean_name}{file_ext}"
 
@@ -72,34 +71,37 @@ async def create_post(
                 buffer.write(await media_file.read())
 
             # Build media URL
-            media_url = f"{UPLOAD_FILES_PREFIX}/{file_name}"
+            media_url = f"{UPLOAD_FILES_PREFIX}{file_name}"
+            print(f"📌 Saved media file, URL: {media_url}")
 
-        # Create post object
+        # Create PostSchema object
         new_post = PostSchema(
             post_id=post_id,
             user_id=current_user.user_id,
             content=content,
-            media_url=media_url,
+            media_url=media_url,  # ✅ Ensure media URL is set
             created_at=datetime.utcnow(),
             likes_nbr=0,
             comments_nbr=0,
             is_liked_by_me=False
         )
 
-        create_new_post(new_post)
+        # Save post to database
+        saved_post = create_new_post(new_post)
+        print(f"📌 Post saved: {saved_post.post_id}, media_url: {saved_post.media_url}")
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content=jsonable_encoder(GenericResponse(
                 success=True,
-                data=new_post,
+                data=saved_post,
                 message="Post created successfully",
                 timestamp=datetime.utcnow()
             ))
         )
 
     except Exception as e:
-        print("Error creating post:", e)
+        print("❌ Error creating post:", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=jsonable_encoder(GenericResponse(
@@ -109,6 +111,9 @@ async def create_post(
                 timestamp=datetime.utcnow()
             ))
         )
+
+
+
 
 @router.get("/likes", response_model=GenericResponse)
 def get_likes_of_post(
@@ -208,8 +213,6 @@ def get_user_post(
                 timestamp=datetime.utcnow()
             ))
         )
-
-
 
 
 

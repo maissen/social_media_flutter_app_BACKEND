@@ -24,7 +24,7 @@ class PostSchema(BaseModel):
     user_id: int
     user: Optional[UserProfileSimplified] = None
     content: str
-    media_url: Optional[str] = ""
+    media_url: str
     created_at: datetime
     likes_nbr: int = 0
     comments_nbr: int = 0
