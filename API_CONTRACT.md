@@ -449,6 +449,49 @@ Development: http://localhost:8000/v1
 ```
 ---
 
+
+### 4.2 Get a single post
+**GET** `/posts/get?post_id=3`
+
+**Headers:** 
+- `Authorization: Bearer <token>`
+
+**Response:** `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        "post_id": 3,
+        "user_id": 4,
+        "user": {
+            "user_id": 4,
+            "email": "test@test.com",
+            "username": "maissen",
+            "profile_picture": "http://localhost:8000/uploads/profile_pictures/user_4_1760389876_1397790.png",
+            "is_following": false
+        },
+        "content": "that's me btw lol <3",
+        "media_url": "",
+        "created_at": "2025-10-13T22:25:02.311902",
+        "likes_nbr": 0,
+        "comments_nbr": 0,
+        "is_liked_by_me": false
+    },
+    "message": "Post retrieved successfully",
+    "timestamp": "2025-10-14T12:12:08.301787"
+}
+```
+
+**Response:** `error`
+```json
+  {
+    "success": false,
+    "message": "Failed to retrieve post",
+    "timestamp": "2025-10-06T10:30:00Z"
+  }
+```
+---
+
 ### 4.5 Update Post
 **PUT** `/posts/update/<post-id>`
 

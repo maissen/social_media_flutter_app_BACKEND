@@ -305,7 +305,7 @@ def update_post(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder(GenericResponse(
                 success=True,
-                data={"new_content": updated_post.bio},
+                data={"new_content": updated_post.content},
                 message="Post updated successfully",
                 timestamp=datetime.utcnow()
             ))
