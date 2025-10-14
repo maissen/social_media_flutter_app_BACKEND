@@ -149,6 +149,63 @@ def get_likes_of_post(
 
 
 
+
+
+@router.get("/get", response_model=GenericResponse)
+def get_user_post(
+    post_id: int = Query(..., description="The ID of the post to retrieve"),
+    current_user=Depends(get_current_user_from_token)
+):
+    """
+    Retrieve a specific post by ID.
+    Requires a valid JWT token.
+    """
+    try:
+        post = get_post_by_id(post_id=post_id)
+
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=jsonable_encoder(GenericResponse(
+                    success=False,
+                    data=None,
+                    message=f"Post with ID {post_id} not found.",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
+        user = get_simplified_user_obj_by_id(user_id=post.user_id)
+        post.user = user
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=post,
+                message="Post retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+    except HTTPException:
+        raise  # re-raise cleanly for FastAPI to handle
+    except Exception as e:
+        print(f"Error fetching post: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="An unexpected error occurred while retrieving the post.",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+
+
+
+
+
 @router.get("/{user_id}", response_model=GenericResponse)
 def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_token)):
     """

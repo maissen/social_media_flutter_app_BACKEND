@@ -381,7 +381,7 @@ Development: http://localhost:8000/v1
 | Field      | Type        | Description                                    |
 |------------|------------|------------------------------------------------|
 | content    | string     | Text content of the post (optional if media_file is provided) |
-| media_file | file       | Optional media file to upload (image/video)   |
+| media_file | file       | media file to upload (image)   |
 
 **Response:** `201 Created`
 ```json
