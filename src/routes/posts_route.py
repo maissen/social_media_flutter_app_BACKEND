@@ -222,19 +222,22 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
     """
     Retrieve all posts for a specific user.
     Requires a valid JWT token.
+    Ordered from most recent to oldest.
     """
     try:
+        # Load the posts for the given user
         posts = get_posts_of_user(current_user_id=current_user.user_id, target_user_id=user_id)
 
+        # Sort posts by created_at (newest first)
+        posts.sort(key=lambda p: p.created_at, reverse=True)
 
-        #? attach user object with each post
+        # Attach user info to each post
         for item in posts:
             post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
-
             if post_owner is not None:
                 item.user = post_owner
 
-
+        # Return JSON response
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder(GenericResponse(
@@ -246,7 +249,7 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
         )
 
     except Exception as e:
-        print(e)
+        print(f"Error fetching user posts: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=jsonable_encoder(GenericResponse(
@@ -256,6 +259,7 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
                 timestamp=datetime.utcnow()
             ))
         )
+
     
 
 
@@ -665,16 +669,18 @@ def get_comments(
     current_user=Depends(get_current_user_from_token)
 ):
     """
-    Get all comments of a given post as CommentProfile objects.
-    Does not include likes or is_liked_by_me.
+    Get all comments of a given post as CommentProfile objects,
+    ordered from most recent to oldest.
     """
     try:
         comments: List[CommentProfile] = get_comments_of_post(post_id, current_user_id=current_user.user_id)
 
-        #? add user object to each comment
+        # Sort comments by creation date (newest first)
+        comments.sort(key=lambda c: c.created_at, reverse=True)
+
+        # Attach user info for each comment
         for item in comments:
             comment_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
-
             if comment_owner is not None:
                 item.user = comment_owner
 
@@ -689,7 +695,7 @@ def get_comments(
         )
 
     except Exception as e:
-        print(e)
+        print(f"Error retrieving comments: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=jsonable_encoder(GenericResponse(
