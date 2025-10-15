@@ -71,7 +71,7 @@ async def create_post(
                 buffer.write(await media_file.read())
 
             # Build media URL
-            media_url = f"{UPLOAD_FILES_PREFIX}{file_name}"
+            media_url = f"{UPLOAD_FILES_PREFIX}{UPLOAD_DIR}{file_name}"
             print(f"📌 Saved media file, URL: {media_url}")
 
         # Create PostSchema object
