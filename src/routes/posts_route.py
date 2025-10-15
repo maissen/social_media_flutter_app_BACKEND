@@ -664,7 +664,7 @@ def toggle_like_comment(
                 type="like comment",
                 post_id=comment.post_id,
                 comment_id=comment_id,
-                message=f"{current_user.username} liked your post"
+                message=f"{current_user.username} liked your comment"
             )
 
             success = like_comment_of_post(comment_id, user_id)
