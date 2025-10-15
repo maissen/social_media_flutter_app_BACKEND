@@ -41,7 +41,7 @@ def get_user_profile(user_id: int, current_user=Depends(get_current_user_from_to
             following_count=len(get_followings_of_user(user_id=user_id)),
             posts_count=user.posts_count,
             created_at=user.created_at,
-            is_following=user.is_following
+            is_following=check_following_status(user_1=current_user.user_id, user_2=user_id)
         )
 
         return JSONResponse(
