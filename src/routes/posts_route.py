@@ -464,13 +464,15 @@ def like_or_dislike_post(
 
         if is_liked:
 
-            notif = create_new_notification(
-                user_id=post.user_id,
-                actor_id=current_user.user_id,
-                type="like post",
-                post_id=post.post_id,
-                message=f"{current_user.username} liked your post"
-            )
+            if current_user.user_id != post.user_id:
+            
+                notif = create_new_notification(
+                    user_id=post.user_id,
+                    actor_id=current_user.user_id,
+                    type="like post",
+                    post_id=post.post_id,
+                    message=f"{current_user.username} liked your post"
+                )
 
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
@@ -658,14 +660,15 @@ def toggle_like_comment(
             action = "disliked"
         else:
 
-            notif = create_new_notification(
-                user_id=get_post_by_id(comment.post_id).user_id,
-                actor_id=current_user.user_id,  # the user who created the comment
-                type="like comment",
-                post_id=comment.post_id,
-                comment_id=comment_id,
-                message=f"{current_user.username} liked your comment"
-            )
+            if current_user.user_id != comment.user_id:
+                notif = create_new_notification(
+                    user_id=get_post_by_id(comment.post_id).user_id,
+                    actor_id=current_user.user_id,  # the user who created the comment
+                    type="like comment",
+                    post_id=comment.post_id,
+                    comment_id=comment_id,
+                    message=f"{current_user.username} liked your comment"
+                )
 
             success = like_comment_of_post(comment_id, user_id)
             action = "liked"
