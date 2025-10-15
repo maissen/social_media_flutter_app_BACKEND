@@ -465,10 +465,10 @@ def like_or_dislike_post(
         if is_liked:
 
             notif = create_new_notification(
-                user_id=post.owner_id,
+                user_id=post.user_id,
                 actor_id=current_user.user_id,
                 type="like post",
-                post_id=post.id,
+                post_id=post.post_id,
                 message=f"{current_user.username} liked your post"
             )
 
@@ -659,10 +659,10 @@ def toggle_like_comment(
         else:
 
             notif = create_new_notification(
-                user_id=get_post_by_id(post_id).user_id,
+                user_id=get_post_by_id(comment.post_id).user_id,
                 actor_id=current_user.user_id,  # the user who created the comment
                 type="like comment",
-                post_id=post_id,
+                post_id=comment.post_id,
                 comment_id=comment_id,
                 message=f"{current_user.username} liked your post"
             )
