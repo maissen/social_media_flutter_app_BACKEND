@@ -234,6 +234,9 @@ def follow_unfollow(
     """
     Toggle following/unfollowing a target user.
     """
+
+    print(f"{get_user_by_id(current_user.user_id).username} ---> {get_user_by_id(target_user_id).username}")
+
     try:
         if current_user.user_id == target_user_id:
             return JSONResponse(
@@ -246,9 +249,10 @@ def follow_unfollow(
             )
 
         if check_following_status(current_user.user_id, target_user_id):
-            print(f"status : {check_following_status(current_user.user_id, target_user_id)}")
             success = unfollow(current_user.user_id, target_user_id)
             action = "unfollowed"
+
+            print("you unfollowed")
             
 
             notif = create_new_notification(
@@ -261,6 +265,8 @@ def follow_unfollow(
         else:
             success = follow(current_user.user_id, target_user_id)
             action = "followed"
+
+            print("you followed")
 
             notif = create_new_notification(
                 user_id=target_user_id,

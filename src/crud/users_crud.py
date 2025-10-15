@@ -147,7 +147,8 @@ def save_followers(followers: List[Tuple[int, int]]):
 def check_following_status(user_1: int, user_2: int) -> bool:
     """Check if user_1 is following user_2."""
     followers = load_followers()
-    return (user_1, user_2) in followers or (user_2, user_1) in followers
+    return (user_1, user_2) in followers
+
 
 def follow(user_1: int, user_2: int) -> bool:
     """Make user_1 follow user_2."""

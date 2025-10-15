@@ -662,7 +662,7 @@ def toggle_like_comment(
 
             if current_user.user_id != comment.user_id:
                 notif = create_new_notification(
-                    user_id=get_post_by_id(comment.post_id).user_id,
+                    user_id=comment.user_id,
                     actor_id=current_user.user_id,  # the user who created the comment
                     type="like comment",
                     post_id=comment.post_id,
