@@ -245,6 +245,7 @@ def follow_unfollow(
             )
 
         if check_following_status(current_user.user_id, target_user_id):
+            print(f"status : {check_following_status(current_user.user_id, target_user_id)}")
             success = unfollow(current_user.user_id, target_user_id)
             action = "unfollowed"
         else:
