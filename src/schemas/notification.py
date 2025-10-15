@@ -7,7 +7,7 @@ class NotificationSchema(BaseModel):
     user_id: int
     actor_id: int
     type: str
-    post_id: int
+    post_id: Optional[int] = None
     comment_id: Optional[int] = None
     message: str
     is_read: bool

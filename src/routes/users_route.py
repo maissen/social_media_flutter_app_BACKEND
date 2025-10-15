@@ -6,6 +6,7 @@ from datetime import datetime
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from src.crud.notifications_crud import create_new_notification
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
 from src.crud.users_crud import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username, check_following_status, follow, get_followers_of_user, get_followings_of_user, unfollow
@@ -248,9 +249,25 @@ def follow_unfollow(
             print(f"status : {check_following_status(current_user.user_id, target_user_id)}")
             success = unfollow(current_user.user_id, target_user_id)
             action = "unfollowed"
+            
+
+            notif = create_new_notification(
+                user_id=target_user_id,
+                actor_id=current_user.user_id,
+                type="unfollow",
+                message=f"{current_user.username} unfollowed you"
+            )
+
         else:
             success = follow(current_user.user_id, target_user_id)
             action = "followed"
+
+            notif = create_new_notification(
+                user_id=target_user_id,
+                actor_id=current_user.user_id,
+                type="follow",
+                message=f"{current_user.username} started following you"
+            )
 
         if not success:
             return JSONResponse(

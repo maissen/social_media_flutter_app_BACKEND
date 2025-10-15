@@ -806,3 +806,64 @@ Development: http://localhost:8000/v1
   "timestamp": "2025-10-06T10:30:00Z"
 }
 ```
+
+
+### 5.1 Get Notifications of a User
+
+```
+GET /notifications?user_id=2
+```
+
+## Headers
+```
+Authorization: Bearer <token>
+```
+
+## Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| user_id | int | ID of the user to fetch notifications for |
+
+## Response: 200 OK
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "actor_id": 5,
+      "type": "like",
+      "post_id": 123,
+      "comment_id": null, (optional)
+      "message": "Alice liked your post",
+      "created_at": "2025-10-15T12:34:56Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "actor_id": 7,
+      "type": "comment",
+      "post_id": null, (optional)
+      "comment_id": 10,
+      "message": "Bob commented: Nice work!",
+      "created_at": "2025-10-14T09:20:00Z"
+    }
+  ],
+  "message": "2 notifications found",
+  "timestamp": "2025-10-15T12:45:00Z"
+}
+```
+
+## Response: Error
+
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Failed to retrieve notifications",
+  "timestamp": "2025-10-15T12:45:00Z"
+}
+```

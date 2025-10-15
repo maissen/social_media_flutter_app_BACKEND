@@ -6,9 +6,10 @@ import shutil
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from src.crud.notifications_crud import create_new_notification
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
-from src.crud.users_crud import update_user_profile_picture
+from src.crud.users_crud import get_followers_of_user, update_user_profile_picture
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 
@@ -54,6 +55,18 @@ async def update_profile_picture(
         file_url = f"{UPLOAD_FILE_PREFIX}/{filename}"
 
         update_user_profile_picture(file=file_url, user_id=current_user.user_id)
+
+        
+        my_followers = get_followers_of_user(current_user.username)
+
+        if my_followers is not None or len(my_followers) > 0:
+            for follower in my_followers:
+                notif = create_new_notification(
+                    user_id=follower.user_id,
+                    actor_id=current_user.user_id,
+                    type="update profile picture",
+                    message=f"{current_user.username} updated his profile picture"
+                )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.routes import users_route, posts_route, profile_route, feed_route, auth_route
+from src.routes import users_route, posts_route, profile_route, feed_route, auth_route, notifications_route
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,6 +12,7 @@ app.include_router(users_route.router, prefix="/users")
 app.include_router(posts_route.router, prefix="/posts")
 app.include_router(profile_route.router, prefix="/profile")
 app.include_router(feed_route.router, prefix="/feed")
+app.include_router(notifications_route.router, prefix="/notifications")
 
 
 # Allow your frontend origin

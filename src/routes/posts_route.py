@@ -5,7 +5,8 @@ from typing import List
 from fastapi import APIRouter, Depends, Form, File, Query, UploadFile, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from src.crud.users_crud import get_simplified_user_obj_by_id
+from src.crud.notifications_crud import create_new_notification
+from src.crud.users_crud import get_followers_of_user, get_simplified_user_obj_by_id
 from src.crud.posts_and_comments_crud import add_comment_to_post, get_all_likes_of_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
 from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
@@ -89,6 +90,18 @@ async def create_post(
         # Save post to database
         saved_post = create_new_post(new_post)
         print(f"📌 Post saved: {saved_post.post_id}, media_url: {saved_post.media_url}")
+
+
+        my_followers = get_followers_of_user(current_user.username)
+
+        if my_followers is not None or len(my_followers) > 0:
+            for follower in my_followers:
+                notif = create_new_notification(
+                    user_id=follower.user_id,
+                    actor_id=current_user.user_id,
+                    type="create post",
+                    message=f"{current_user.username} shared a new post"
+                )
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -450,6 +463,15 @@ def like_or_dislike_post(
         post.is_liked_by_me = is_liked
 
         if is_liked:
+
+            notif = create_new_notification(
+                user_id=post.owner_id,
+                actor_id=current_user.user_id,
+                type="like post",
+                post_id=post.id,
+                message=f"{current_user.username} liked your post"
+            )
+
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
                 content=jsonable_encoder(GenericResponse(
@@ -498,6 +520,15 @@ def create_new_comment(
         comment = add_comment_to_post(current_user.user_id, post_id, content.content)
 
         if comment is not None:
+
+            notif = create_new_notification(
+                user_id=get_post_by_id(post_id).user_id,
+                actor_id=current_user.user_id,  # the user who created the comment
+                type="create comment",
+                post_id=post_id,
+                message=f"{current_user.username} left a comment in your post"
+            )
+
             return JSONResponse(
                 status_code=status.HTTP_201_CREATED,
                 content=jsonable_encoder(GenericResponse(
@@ -626,6 +657,16 @@ def toggle_like_comment(
             success = dislike_comment_of_post(comment_id, user_id)
             action = "disliked"
         else:
+
+            notif = create_new_notification(
+                user_id=get_post_by_id(post_id).user_id,
+                actor_id=current_user.user_id,  # the user who created the comment
+                type="like comment",
+                post_id=post_id,
+                comment_id=comment_id,
+                message=f"{current_user.username} liked your post"
+            )
+
             success = like_comment_of_post(comment_id, user_id)
             action = "liked"
 
