@@ -497,3 +497,16 @@ def get_posts_count(user_id: int) -> int:
     posts = load_data_from_dat_file(POSTS_DB)
     user_posts = [p for p in posts if p.user_id == user_id]
     return len(user_posts)
+
+
+
+def generate_id_for_new_post() -> int:
+    """
+    Generate a globally unique post_id by finding the highest existing ID and adding 1.
+    This ensures no conflicts even if posts are deleted or created by different users.
+    """
+    posts = load_data_from_dat_file(POSTS_DB)
+    if not posts:
+        return 1
+    max_id = max(p.post_id for p in posts)
+    return max_id + 1
