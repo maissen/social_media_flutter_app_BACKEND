@@ -10,6 +10,7 @@ from src.crud.notifications_crud import create_new_notification
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
 from src.crud.users_crud import get_followers_of_user, update_user_profile_picture
+from src.routes.ws import broadcast_to_followers_of_user
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 
@@ -67,6 +68,8 @@ async def update_profile_picture(
                     type="update profile picture",
                     message=f"{current_user.username} updated his profile picture"
                 )
+
+        broadcast_to_followers_of_user(followers=my_followers, notification=notif)
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,

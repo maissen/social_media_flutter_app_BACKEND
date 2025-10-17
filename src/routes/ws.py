@@ -1,7 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src.schemas.notification import NotificationSchema
-from src.crud.users_crud import get_followers_of_user
 from src.schemas.users import UserProfileSchema
+from src.schemas.notification import NotificationSchema
 
 
 router = APIRouter()
@@ -21,7 +20,7 @@ def disconnect_client(websocket: WebSocket):
     global connected_clients
     connected_clients = [(uid, ws) for uid, ws in connected_clients if ws != websocket]
 
-async def broadcast_to_followers(user_id: int, notification: dict, followers: list[UserProfileSchema]):
+async def broadcast_to_followers_of_user(notification: NotificationSchema, followers: list[UserProfileSchema]):
 
     follower_ids = [f.user_id for f in followers]
 

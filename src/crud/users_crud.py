@@ -4,6 +4,7 @@ from src.schemas.users import UserSchema, UserProfileSchema, UpdateBioRequest, U
 
 USERS_DB_FILE = "database/users_database.dat"
 DB_FILE = "database/followers_database.dat"
+USERS_IDS_DB_FILE = "database/users_ids_database.dat"
 
 # ======================
 # Users CRUD
@@ -17,8 +18,20 @@ def load_users() -> list[UserSchema]:
     except (FileNotFoundError, EOFError):
         return []
     
-def generate_new_user_id():
-    return len(load_users()) + 1
+def generate_new_user_id() -> int:
+    """Generate a new user ID, stored persistently in a file."""
+    try:
+        with open(USERS_IDS_DB_FILE, "rb") as f:
+            last_id = pickle.load(f)
+    except (FileNotFoundError, EOFError):
+        last_id = -1  # No IDs yet, first ID will be 0
+
+    new_id = last_id + 1
+
+    with open(USERS_IDS_DB_FILE, "wb") as f:
+        pickle.dump(new_id, f)
+
+    return new_id
 
 def save_users(users: list[UserSchema]):
     """Save users to the file."""
