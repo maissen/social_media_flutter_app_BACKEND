@@ -1,42 +1,61 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src.schemas.users import UserProfileSchema
-from src.schemas.notification import NotificationSchema
+from http.client import HTTPException
+from src.crud.messages_crud import get_conversation, insert_message
+from src.crud.users_crud import get_user_by_id
+from fastapi import WebSocket, WebSocketDisconnect, APIRouter
+import json
+from schemas.chats import PrivateMessage
+from src.core.ws_manager import manager
+
+router = APIRouter(prefix="", tags=["Messages"])
+
+# ======================
+# Send a message
+# ======================
+@router.post("/", response_model=PrivateMessage)
+def send_message(sender_id: int, recipient_id: int, content: str):
+    # Check if users exist
+    sender = get_user_by_id(sender_id)
+    recipient = get_user_by_id(recipient_id)
+    if not sender or not recipient:
+        raise HTTPException(status_code=404, detail="Sender or recipient not found")
+
+    message = insert_message(sender_id, recipient_id, content)
+    return message
+
+# ======================
+# Get conversation
+# ======================
+@router.get("/{user_1}/{user_2}", response_model=List[PrivateMessage])
+def conversation(user_1: int, user_2: int):
+    # Check if users exist
+    user_a = get_user_by_id(user_1)
+    user_b = get_user_by_id(user_2)
+    if not user_a or not user_b:
+        raise HTTPException(status_code=404, detail="One or both users not found")
+
+    messages = get_conversation(user_1, user_2)
+    return messages
 
 
-router = APIRouter()
 
-
-connected_clients: list[tuple[int, WebSocket]] = []  
-# Store tuples of (user_id, websocket) to know who is connected
-
-async def connect_client(user_id: int, websocket: WebSocket):
-    await websocket.accept()
-    connected_clients.append((user_id, websocket))
-
-    print(f"user_id : {user_id} connected {websocket}")
-
-
-def disconnect_client(websocket: WebSocket):
-    global connected_clients
-    connected_clients = [(uid, ws) for uid, ws in connected_clients if ws != websocket]
-
-async def broadcast_to_followers_of_user(notification: NotificationSchema, followers: list[UserProfileSchema]):
-
-    follower_ids = [f.user_id for f in followers]
-
-    for uid, ws in connected_clients:
-        if uid in follower_ids:
-            await ws.send_json(notification)
-
-
-
-@router.websocket("/{user_id}")
-async def websocket_endpoint(user_id: int, websocket: WebSocket):
-    """Connect a specific logged-in user"""
-    await connect_client(user_id, websocket)
+@router.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    await manager.connect(user_id, websocket)
     try:
         while True:
-            await websocket.receive_text()
+            data = await websocket.receive_text()
+            try:
+                msg = PrivateMessage(**json.loads(data))
 
+                # Send the message to the recipient if they're connected
+                await manager.send_personal_message({
+                    "type": "private_message",
+                    "sender_id": msg.sender_id,
+                    "content": msg.content
+                }, msg.recipient_id)
+
+            except Exception as e:
+                # Could not parse message, ignore or log
+                print(f"Failed to handle message: {e}")
     except WebSocketDisconnect:
-        disconnect_client(websocket)
+        manager.disconnect(websocket)
