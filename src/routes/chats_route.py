@@ -1,11 +1,9 @@
-from http.client import HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import List
-from src.crud.messages_crud import get_conversation, insert_message
+from src.core.security import get_current_user_from_token
+from src.crud.messages_crud import get_conversation, get_conversations, insert_message
 from src.crud.users_crud import get_user_by_id
-from fastapi import WebSocket, WebSocketDisconnect, APIRouter
-import json
-from src.schemas.chats import PrivateMessage
-from src.core.ws_manager import manager
+from src.schemas.chats import PrivateMessage, Conversation, SendMessageRequest
 
 router = APIRouter(prefix="", tags=["Messages"])
 
@@ -13,41 +11,39 @@ router = APIRouter(prefix="", tags=["Messages"])
 # Send a message
 # ======================
 @router.post("/send", response_model=PrivateMessage)
-def send_message(sender_id: int, recipient_id: int, content: str):
-    # Check if users exist
-    sender = get_user_by_id(sender_id)
-    recipient = get_user_by_id(recipient_id)
-    if not sender or not recipient:
-        raise HTTPException(status_code=404, detail="Sender or recipient not found")
+def send_message(
+    body: SendMessageRequest,
+    current_user=Depends(get_current_user_from_token)
+):
+    # Check if recipient exists
+    recipient = get_user_by_id(body.recipient_id)
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
 
-    message = insert_message(sender_id, recipient_id, content)
+    message = insert_message(current_user.user_id, body.recipient_id, body.content)
     return message
 
 # ======================
-# Get conversation
+# Get conversation with a specific user
 # ======================
-@router.get("/conversation/{user_1}/{user_2}", response_model=List[PrivateMessage])
-def conversation(user_1: int, user_2: int):
-    # Check if users exist
-    user_a = get_user_by_id(user_1)
-    user_b = get_user_by_id(user_2)
-    if not user_a or not user_b:
-        raise HTTPException(status_code=404, detail="One or both users not found")
+@router.get("/conversation", response_model=Conversation)
+def conversation(current_user=Depends(get_current_user_from_token), recipient_id: int = Query(...)):
+    # Check if recipient exists
+    recipient = get_user_by_id(recipient_id)
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
 
-    messages = get_conversation(user_1, user_2)
-    return messages
+    messages = get_conversation(current_user.user_id, recipient_id)
+    return Conversation(participant_id=recipient_id, messages=messages)
 
-
-
-@router.get("/my_conversations", response_model=Dict[int, List[PrivateMessage]])
-def get_my_conversations(current_user: int = Depends(get_current_user)):
+# ======================
+# Get all conversations of the current user
+# ======================
+@router.get("/my_conversations", response_model=List[Conversation])
+def get_my_conversations(current_user=Depends(get_current_user_from_token)):
     """
     Fetch all conversations for the logged-in user.
-    Returns a dictionary where:
-        - Key: other user's ID
-        - Value: list of messages sorted by timestamp
+    Returns a list of Conversation objects.
     """
-    conversations = get_conversations(current_user)
-    if not conversations:
-        return {}
+    conversations = get_conversations(current_user.user_id)
     return conversations

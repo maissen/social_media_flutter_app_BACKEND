@@ -1,10 +1,8 @@
 import pickle
-from typing import List
 from datetime import datetime
-from src.schemas.chats import PrivateMessage
 from typing import Dict, List
 from collections import defaultdict
-from src.schemas.chats import PrivateMessage
+from src.schemas.chats import PrivateMessage, Conversation
 
 MESSAGES_DB_FILE = "database/messages_database.dat"
 
@@ -46,16 +44,14 @@ def get_conversation(user_1: int, user_2: int) -> List[PrivateMessage]:
     return sorted(conversation, key=lambda msg: msg.timestamp)
 
 
-def get_conversations(user_id: int) -> Dict[int, List[PrivateMessage]]:
+def get_conversations(user_id: int) -> List[Conversation]:
     """
     Fetch all conversations of a user, grouped by the other participant's user_id.
     Returns:
-        A dictionary where:
-            - Key: other user's ID
-            - Value: list of PrivateMessageSchema objects (sorted by timestamp)
+        A list of Conversation objects.
     """
     messages = load_messages()
-    conversations: Dict[int, List[PrivateMessage]] = defaultdict(list)
+    conversations_dict: Dict[int, List[PrivateMessage]] = defaultdict(list)
 
     for msg in messages:
         if msg.sender_id == user_id:
@@ -66,17 +62,19 @@ def get_conversations(user_id: int) -> Dict[int, List[PrivateMessage]]:
             continue  # Skip messages not involving the user
 
         # Ensure we always store schema objects
-        msg = PrivateMessage(
+        msg_obj = PrivateMessage(
             sender_id=msg.sender_id,
             recipient_id=msg.recipient_id,
             content=msg.content,
             timestamp=msg.timestamp
         )
 
-        conversations[other_id].append(msg)
+        conversations_dict[other_id].append(msg_obj)
 
-    # Sort each conversation by timestamp
-    for other_id in conversations:
-        conversations[other_id].sort(key=lambda m: m.timestamp)
+    # Build list of Conversation objects
+    conversations_list: List[Conversation] = []
+    for participant_id, msgs in conversations_dict.items():
+        msgs.sort(key=lambda m: m.timestamp)
+        conversations_list.append(Conversation(participant_id=participant_id, messages=msgs))
 
-    return conversations
+    return conversations_list
