@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Simple Live Chat (WebSocket)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 0; display: flex; height: 100vh; }
+    .sidebar { width: 260px; border-right: 1px solid #e6e6e6; padding: 16px; box-sizing: border-box; }
+    .main { flex: 1; display: flex; flex-direction: column; }
+    .conn { margin-bottom: 12px; }
+    .online-list { list-style: none; padding: 0; margin: 0; max-height: 60vh; overflow: auto; }
+    .online-list li { padding: 8px; border: 1px solid #f0f0f0; margin-bottom: 6px; cursor: pointer; border-radius: 6px; }
+    .online-list li.active { background: #f5faff; border-color:#cfe8ff; }
+    .chat-header { padding: 12px 16px; border-bottom: 1px solid #eaeaea; }
+    .messages { flex: 1; padding: 12px; overflow: auto; background: #fafafa; }
+    .message { max-width: 70%; padding: 8px 10px; margin-bottom: 8px; border-radius: 8px; }
+    .msg-from { background: #e9f5ff; align-self: flex-start; }
+    .msg-to { background: #e8ffe9; align-self: flex-end; margin-left: auto; }
+    .composer { display:flex; padding: 10px; border-top: 1px solid #eaeaea; gap:8px; }
+    .composer input[type="text"] { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
+    button { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; cursor: pointer; }
+    button.primary { background: #007bff; color: white; border-color: #007bff; }
+    .small { font-size: 12px; color: #666; }
+    .placeholder { color: #999; text-align: center; margin-top: 30px; }
+    .meta { font-size: 11px; color: #666; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="conn">
+      <label class="small">Your user_id</label><br/>
+      <input id="userIdInput" type="number" placeholder="e.g. 1" style="width:100%; padding:8px; margin-top:6px; box-sizing:border-box;">
+      <div style="margin-top:8px; display:flex; gap:8px;">
+        <button id="connectBtn" class="primary">Connect</button>
+        <button id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+      <div class="meta" id="connStatus">Not connected</div>
+    </div>
+
+    <h4 style="margin-top:14px; margin-bottom:8px;">Online users</h4>
+    <ul id="onlineList" class="online-list"></ul>
+    <div class="small" style="margin-top:10px;">Click a user to select conversation.</div>
+  </div>
+
+  <div class="main">
+    <div class="chat-header" id="chatHeader">
+      <strong id="chatWith">No conversation</strong>
+      <div class="small" id="headerSub">Select someone from the left to chat</div>
+    </div>
+
+    <div id="messages" class="messages" style="display:flex; flex-direction:column;"></div>
+
+    <div class="composer">
+      <input id="messageInput" type="text" placeholder="Type a message..." disabled>
+      <button id="sendBtn" disabled>Send</button>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Configuration ----------
+    function getWebSocketUrl(userId) {
+      // default: same host/port as this page, adjust if backend is elsewhere:
+      // ws://localhost:8000/ws?user_id=...
+      const loc = window.location;
+      const protocol = loc.protocol === "https:" ? "wss:" : "ws:";
+      const host = loc.hostname + (loc.port ? (":" + loc.port) : ":8000"); // fallback to :8000 if not serving page from backend
+      // If you're serving this file from a different origin than FastAPI, change host to "localhost:8000".
+      return `ws://127.0.0.1:8000/ws?user_id=${encodeURIComponent(userId)}`;
+    }
+
+    // ---------- State ----------
+    let ws = null;
+    let me = null;
+    let online = [];          // array of user_ids
+    let currentPeer = null;   // currently selected participant_id
+    // local simple in-memory messages store for simulation
+    let chats = {}; // chats[participantId] = [{from, content, ts, type}]
+
+    // ---------- DOM ----------
+    const userIdInput = document.getElementById("userIdInput");
+    const connectBtn = document.getElementById("connectBtn");
+    const disconnectBtn = document.getElementById("disconnectBtn");
+    const connStatus = document.getElementById("connStatus");
+    const onlineListEl = document.getElementById("onlineList");
+    const messagesEl = document.getElementById("messages");
+    const chatWithEl = document.getElementById("chatWith");
+    const headerSub = document.getElementById("headerSub");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // ---------- Helpers ----------
+    function addLocalMessage(participantId, msg) {
+      if (!chats[participantId]) chats[participantId] = [];
+      chats[participantId].push(msg);
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleTimeString();
+    }
+
+    function renderOnlineList() {
+      onlineListEl.innerHTML = "";
+      // show other users (exclude me)
+      online.filter(id => id !== me).forEach(id => {
+        const li = document.createElement("li");
+        li.textContent = `User ${id}`;
+        li.dataset.userid = id;
+        if (String(id) === String(currentPeer)) li.classList.add("active");
+        li.addEventListener("click", () => {
+          currentPeer = id;
+          renderChatHeader();
+          renderMessages();
+          // mark active
+          Array.from(onlineListEl.children).forEach(child => child.classList.toggle("active", child.dataset.userid === String(currentPeer)));
+        });
+        onlineListEl.appendChild(li);
+      });
+      if (online.filter(id => id !== me).length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "No other users online";
+        li.style.opacity = "0.6";
+        onlineListEl.appendChild(li);
+      }
+    }
+
+    function renderChatHeader() {
+      if (!currentPeer) {
+        chatWithEl.textContent = "No conversation";
+        headerSub.textContent = "Select someone from the left to chat";
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+      } else {
+        chatWithEl.textContent = `Chat with User ${currentPeer}`;
+        headerSub.textContent = `You (${me}) ↔ ${currentPeer}`;
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+      }
+    }
+
+    function renderMessages() {
+      messagesEl.innerHTML = "";
+      if (!currentPeer) {
+        const p = document.createElement("div");
+        p.className = "placeholder";
+        p.textContent = "No conversation selected.";
+        messagesEl.appendChild(p);
+        return;
+      }
+      const msgs = chats[currentPeer] || [];
+      msgs.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "message " + (m.from === me ? "msg-to" : "msg-from");
+        div.innerHTML = `<div style="font-size:13px;"><strong>${m.from === me ? "You" : "User " + m.from}</strong></div>
+                         <div style="margin-top:6px;">${escapeHtml(m.content)}</div>
+                         <div style="font-size:11px; margin-top:6px; color:#666;">${formatTime(m.ts)}</div>`;
+        messagesEl.appendChild(div);
+      });
+      // scroll to bottom
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+
+    // ---------- WebSocket ----------
+    function connect() {
+      if (ws) ws.close();
+      me = userIdInput.value && userIdInput.value.trim() ? Number(userIdInput.value) : null;
+      if (!me) {
+        alert("Please enter a numeric user_id first.");
+        return;
+      }
+      const url = getWebSocketUrl(me);
+      connStatus.textContent = `Connecting to ${url} ...`;
+      try {
+        ws = new WebSocket(url);
+      } catch (err) {
+        connStatus.textContent = "WebSocket error: invalid URL or browser blocked it.";
+        console.error(err);
+        return;
+      }
+
+      ws.onopen = () => {
+        connStatus.textContent = `Connected as ${me}`;
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        userIdInput.disabled = true;
+      };
+
+      ws.onmessage = (evt) => {
+        // server sends JSON
+        let data;
+        try { data = JSON.parse(evt.data); } catch (e) { console.warn("non-json msg", evt.data); return; }
+
+        if (data.type === "user_list") {
+          online = data.users || [];
+          renderOnlineList();
+          // keep currentPeer selected where possible
+          if (currentPeer && !online.includes(Number(currentPeer))) {
+            // peer went offline: leave conversation but show it; you can still send (server may drop)
+            // optional: set currentPeer = null;
+            // currentPeer = null;
+            // renderChatHeader();
+          }
+        }
+
+        else if (data.type === "chat") {
+          // incoming chat from someone
+          const from = data.from;
+          const content = data.content;
+          const ts = Date.now();
+          addLocalMessage(from, { from, content, ts, type: "in" });
+          // open conversation if not set
+          if (!currentPeer) currentPeer = from;
+          renderChatHeader();
+          renderMessages();
+        }
+
+        else if (data.type === "sent") {
+          // echo for messages you sent, server responded with 'sent'
+          const to = data.to;
+          const content = data.content;
+          const ts = Date.now();
+          addLocalMessage(to, { from: me, content, ts, type: "out" });
+          // if no currentPeer, set to recipient
+          if (!currentPeer) currentPeer = to;
+          renderChatHeader();
+          renderMessages();
+        }
+
+        else {
+          console.log("unknown msg", data);
+        }
+      };
+
+      ws.onclose = () => {
+        connStatus.textContent = "Disconnected";
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        userIdInput.disabled = false;
+        ws = null;
+        // clear online list
+        online = [];
+        renderOnlineList();
+      };
+
+      ws.onerror = (err) => {
+        console.error("ws error", err);
+      };
+    }
+
+    function disconnect() {
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+    }
+
+    function sendMessage() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        alert("Not connected.");
+        return;
+      }
+      if (!currentPeer) { alert("Select a recipient from the left."); return; }
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const payload = {
+        type: "chat",
+        recipient_id: Number(currentPeer),
+        content: text
+      };
+      ws.send(JSON.stringify(payload));
+      // optional: we wait for server 'sent' echo to display; but add immediate local for snappy UI:
+      addLocalMessage(currentPeer, { from: me, content: text, ts: Date.now(), type: "out" });
+      messageInput.value = "";
+      renderMessages();
+    }
+
+    // ---------- UI wiring ----------
+    connectBtn.addEventListener("click", connect);
+    disconnectBtn.addEventListener("click", disconnect);
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+
+    // Helpful hotkeys for testing:
+    // - Ctrl+1..9 set user id quickly
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.key >= "1" && e.key <= "9") {
+        userIdInput.value = e.key;
+      }
+    });
+
+    // initial render
+    renderOnlineList();
+    renderChatHeader();
+    renderMessages();
+  </script>
+</body>
+</html>

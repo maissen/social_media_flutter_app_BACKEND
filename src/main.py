@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from routes import chats_route
-from src.routes import users_route, posts_route, profile_route, feed_route, auth_route, notifications_route, ws_route
+from src.routes import users_route, posts_route, profile_route, feed_route, auth_route, notifications_route, ws_route, chats_route
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
