@@ -4,6 +4,8 @@ from src.core.security import get_current_user_from_token
 from src.crud.messages_crud import get_conversation, get_conversations, insert_message
 from src.crud.users_crud import get_user_by_id
 from src.schemas.chats import PrivateMessage, Conversation, SendMessageRequest
+from src.schemas.users import UserProfileSimplified
+from src.crud.users_crud import get_simplified_user_obj_by_id
 
 router = APIRouter(prefix="", tags=["Messages"])
 
@@ -39,11 +41,17 @@ def conversation(current_user=Depends(get_current_user_from_token), recipient_id
 # ======================
 # Get all conversations of the current user
 # ======================
-@router.get("/my_conversations", response_model=List[Conversation])
+@router.get("/my_conversations", response_model=List[UserProfileSimplified])
 def get_my_conversations(current_user=Depends(get_current_user_from_token)):
     """
-    Fetch all conversations for the logged-in user.
-    Returns a list of Conversation objects.
+    Fetch all users the current user has had conversations with.
     """
-    conversations = get_conversations(current_user.user_id)
-    return conversations
+    raw_conversations = get_conversations(current_user.user_id)  # Should return participant_ids
+    users = []
+
+    for conversation in raw_conversations:
+        user = get_simplified_user_obj_by_id(user_id=conversation.participant_id)
+        if user:
+            users.append(user)
+
+    return users
