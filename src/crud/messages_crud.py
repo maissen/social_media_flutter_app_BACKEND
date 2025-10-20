@@ -2,6 +2,9 @@ import pickle
 from typing import List
 from datetime import datetime
 from src.schemas.chats import PrivateMessage
+from typing import Dict, List
+from collections import defaultdict
+from src.schemas.chats import PrivateMessage
 
 MESSAGES_DB_FILE = "database/messages_database.dat"
 
@@ -41,3 +44,39 @@ def get_conversation(user_1: int, user_2: int) -> List[PrivateMessage]:
            (msg.sender_id == user_2 and msg.recipient_id == user_1)
     ]
     return sorted(conversation, key=lambda msg: msg.timestamp)
+
+
+def get_conversations(user_id: int) -> Dict[int, List[PrivateMessage]]:
+    """
+    Fetch all conversations of a user, grouped by the other participant's user_id.
+    Returns:
+        A dictionary where:
+            - Key: other user's ID
+            - Value: list of PrivateMessageSchema objects (sorted by timestamp)
+    """
+    messages = load_messages()
+    conversations: Dict[int, List[PrivateMessage]] = defaultdict(list)
+
+    for msg in messages:
+        if msg.sender_id == user_id:
+            other_id = msg.recipient_id
+        elif msg.recipient_id == user_id:
+            other_id = msg.sender_id
+        else:
+            continue  # Skip messages not involving the user
+
+        # Ensure we always store schema objects
+        msg = PrivateMessage(
+            sender_id=msg.sender_id,
+            recipient_id=msg.recipient_id,
+            content=msg.content,
+            timestamp=msg.timestamp
+        )
+
+        conversations[other_id].append(msg)
+
+    # Sort each conversation by timestamp
+    for other_id in conversations:
+        conversations[other_id].sort(key=lambda m: m.timestamp)
+
+    return conversations

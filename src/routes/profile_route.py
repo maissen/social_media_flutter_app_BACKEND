@@ -10,7 +10,7 @@ from src.crud.notifications_crud import create_new_notification
 from src.schemas.generic_response import GenericResponse
 from src.core.security import get_current_user_from_token
 from src.crud.users_crud import get_followers_of_user, update_user_profile_picture
-from src.routes.ws import broadcast_to_followers_of_user
+# from src.routes.ws import broadcast_to_followers_of_user
 
 router = APIRouter(prefix="", tags=["Profile Management"])
 
