@@ -8,10 +8,11 @@ from fastapi.responses import JSONResponse
 from src.crud.notifications_crud import create_new_notification
 from src.crud.users_crud import get_followers_of_user, get_simplified_user_obj_by_id
 from src.crud.posts_and_comments_crud import add_comment_to_post, generate_id_for_new_post, get_all_likes_of_post, remove_comment_from_post, dislike_comment_of_post, get_comment_by_id, get_comments_of_post, is_comment_liked_by_me, like_comment_of_post
-from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, get_posts_count, is_post_liked_by_me, like_post, update_a_post
+from src.crud.posts_and_comments_crud import delete_a_post, dislike_post, get_post_by_id, get_posts_of_user, create_new_post, is_post_liked_by_me, like_post, update_a_post
 from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
+from src.services.input_checker_for_bad_words import is_text_clean
 
 
 # Directory where uploaded media will be stored
@@ -46,6 +47,16 @@ async def create_post(
                 content=jsonable_encoder(GenericResponse(
                     success=False,
                     message="Please add content or a media file to your post.",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+        
+        if not is_text_clean(content):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
                     timestamp=datetime.utcnow()
                 ))
             )
@@ -317,6 +328,16 @@ def update_post(
                     timestamp=datetime.utcnow()
                 ))
             )
+        
+        if not is_text_clean(payload.new_content):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
+                    timestamp=datetime.utcnow()
+                ))
+            )
 
         updated_post = update_a_post(post_id, payload.new_content)
         if not updated_post:
@@ -518,11 +539,21 @@ def create_new_comment(
     Create a new comment on a post.
     The post_id is provided as a query parameter.
     """
-    try:
+    try:    
+        if not is_text_clean(content.content):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+        
         comment = add_comment_to_post(current_user.user_id, post_id, content.content)
 
         if comment is not None:
-
+            
             notif = create_new_notification(
                 user_id=get_post_by_id(post_id).user_id,
                 actor_id=current_user.user_id,  # the user who created the comment
@@ -530,6 +561,7 @@ def create_new_comment(
                 post_id=post_id,
                 message=f"{current_user.username} left a comment in your post"
             )
+
 
             return JSONResponse(
                 status_code=status.HTTP_201_CREATED,

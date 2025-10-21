@@ -8,13 +8,26 @@ from src.core.security import get_password_hash, verify_password, create_access_
 from src.services.auth_service import logout_user
 from src.crud.users_crud import insert_new_user, get_user_by_email, generate_new_user_id
 from src.schemas.users import UserSchema
+from src.services.input_checker_for_bad_words import is_text_clean
 
 router = APIRouter(prefix="", tags=["Authentication"])
 
 
 @router.post("/register", response_model=GenericResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: RegisterUserRequest):
+    
     try:
+
+        if not is_text_clean(payload.username) or  not is_text_clean(payload.email):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
         existing_user = get_user_by_email(payload.email)
         if existing_user:
             return JSONResponse(

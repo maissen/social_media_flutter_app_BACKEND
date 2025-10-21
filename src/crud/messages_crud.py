@@ -78,3 +78,24 @@ def get_conversations(user_id: int) -> List[Conversation]:
         conversations_list.append(Conversation(participant_id=participant_id, messages=msgs))
 
     return conversations_list
+
+
+def set_message_is_read(sender_id: int, recipient_id: int):
+    """
+    Mark all messages from a given sender to a recipient as read.
+    
+    Args:
+        sender_id (int): The ID of the user who sent the messages.
+        recipient_id (int): The ID of the recipient whose messages should be marked as read.
+    """
+    messages = load_messages()
+    updated = False
+
+    for msg in messages:
+        # Only mark messages received by recipient_id from sender_id
+        if msg.sender_id == sender_id and msg.recipient_id == recipient_id and not msg.is_read:
+            msg.is_read = True
+            updated = True
+
+    if updated:
+        save_messages(messages)

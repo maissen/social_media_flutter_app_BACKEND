@@ -8,6 +8,7 @@ class PrivateMessage(BaseModel):
     sender_id: int
     recipient_id: int
     content: str
+    is_read: bool = False
     timestamp: datetime
 
 class Conversation(BaseModel):

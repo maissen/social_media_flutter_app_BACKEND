@@ -1,9 +1,9 @@
 from typing import List
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
-from schemas.notification import NotificationSchema
+from src.schemas.notification import NotificationSchema
 from src.schemas.generic_response import GenericResponse
 from src.crud.notifications_crud import get_notifs_of_user, mark_notification_as_read
 

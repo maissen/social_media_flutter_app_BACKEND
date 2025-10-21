@@ -6,6 +6,7 @@ from datetime import datetime
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from src.services.input_checker_for_bad_words import is_text_clean
 from src.crud.notifications_crud import create_new_notification
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
@@ -82,6 +83,16 @@ def update_bio(
                     success=False,
                     data=None,
                     message="User not found",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+        
+        if not is_text_clean(payload.new_bio):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
                     timestamp=datetime.utcnow()
                 ))
             )
@@ -176,6 +187,17 @@ def search_users(
     Returns users whose username contains the search username (case-insensitive).
     """
     try:
+
+        if not is_text_clean(username):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=jsonable_encoder(GenericResponse(
+                    success=False,
+                    message="You're not allowed to use bad words!",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+
         matching_users = find_matching_username(current_user=current_user.user_id, username=username)
         
         if not matching_users:
