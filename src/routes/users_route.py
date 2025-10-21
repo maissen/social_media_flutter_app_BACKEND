@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from src.crud.notifications_crud import create_new_notification
 from src.core.security import get_current_user_from_token
 from src.schemas.generic_response import GenericResponse
-from src.crud.users_crud import get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username, check_following_status, follow, get_followers_of_user, get_followings_of_user, unfollow
+from src.crud.users_crud import get_simplified_user_obj_by_id, get_user_by_id, update_user_bio, update_user_profile_picture, find_matching_username, check_following_status, follow, get_followers_of_user, get_followings_of_user, unfollow
 from src.schemas.users import UpdateBioRequest, UserProfileSchema
 
 
@@ -361,6 +361,50 @@ def get_followings(
                 success=True,
                 data=followings_data,
                 message="Followings retrieved successfully",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=jsonable_encoder(GenericResponse(
+                success=False,
+                data=None,
+                message="Failed to fetch followings list",
+                timestamp=datetime.utcnow()
+            ))
+        )
+
+
+@router.get("/get-user", response_model=GenericResponse)
+def get_followings(
+    user_id: int = Query(..., description="ID of the user fetch his data"),
+    current_user=Depends(get_current_user_from_token)
+):
+    try:
+        user = get_simplified_user_obj_by_id(user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail=jsonable_encoder(GenericResponse(
+                    success=False,
+                    data=None,
+                    message="User does not exist",
+                    timestamp=datetime.utcnow()
+                ))
+            )
+        
+        user.is_following = check_following_status(current_user.user_id, user_id)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder(GenericResponse(
+                success=True,
+                data=user,
+                message="user retrieved successfully",
                 timestamp=datetime.utcnow()
             ))
         )

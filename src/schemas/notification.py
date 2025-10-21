@@ -10,5 +10,5 @@ class NotificationSchema(BaseModel):
     post_id: Optional[int] = None
     comment_id: Optional[int] = None
     message: str
-    is_read: bool
+    is_read: bool = False
     created_at: datetime

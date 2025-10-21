@@ -20,18 +20,36 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int = Query(...)):
                 recipient_id = data.get("recipient_id")
                 content = data.get("content")
 
-                # Send to recipient
+                print(f"sender : {user_id}, receiver : {recipient_id}")
+
+                # 1. Save message to database/pickle
+                from src.crud.messages_crud import insert_message
+                insert_message(sender_id=user_id, recipient_id=recipient_id, content=content)
+                print("message is inserted")
+
+                # 2. Send to recipient
                 await manager.send_personal_message({
                     "type": "chat",
                     "from": user_id,
                     "content": content
                 }, recipient_id)
 
-                # Optional: echo back to sender
+                # 3. Echo back to sender
                 await manager.send_personal_message({
                     "type": "sent",
                     "to": recipient_id,
                     "content": content
                 }, user_id)
+
+            if msg_type == "typing":
+                recipient_id = data.get("recipient_id")
+                status = data.get("status")  # "start" or "stop"
+
+                # Send typing status to recipient
+                await manager.send_personal_message({
+                    "type": "typing",
+                    "from": user_id,
+                    "status": status
+                }, recipient_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
