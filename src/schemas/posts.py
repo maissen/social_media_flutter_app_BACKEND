@@ -15,8 +15,6 @@ class CommentProfile(BaseModel):
     likes_nbr: int = 0
     is_liked_by_me: bool = False
 
-    class Config:
-        orm_mode = True
 
 
 class PostSchema(BaseModel):
@@ -29,9 +27,6 @@ class PostSchema(BaseModel):
     likes_nbr: int = 0
     comments_nbr: int = 0
     is_liked_by_me: bool = False
-
-    class Config:
-        orm_mode = True
 
 
 class UpdatePostSchema(BaseModel):

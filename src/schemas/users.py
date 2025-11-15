@@ -16,8 +16,6 @@ class UserSchema(BaseModel):
     created_at: datetime
     is_following: bool = False
 
-    class Config:
-        orm_mode = True
 
 class UserProfileSchema(BaseModel):
     user_id: int
@@ -31,9 +29,6 @@ class UserProfileSchema(BaseModel):
     created_at: datetime
     is_following: bool = False
 
-
-    class Config:
-        orm_mode = True
 
 
 class UpdateBioRequest(BaseModel):
