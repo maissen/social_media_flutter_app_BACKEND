@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from src.schemas.users import UserProfileSimplified
 
+
 class CommentProfile(BaseModel):
     comment_id: int
     post_id: int
