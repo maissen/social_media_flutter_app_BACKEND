@@ -7,7 +7,7 @@ def is_text_clean(text, bad_words=None):
     if bad_words is None:
         bad_words = [
             "ass", "bitch", "bastard", "crap", "damn", "dick", "fuck", 
-            "hell", "idiot", "jerk", "piss", "shit", "slut", "whore"
+            "idiot", "jerk", "piss", "shit", "slut", "whore"
         ]
 
     text_lower = text.lower()

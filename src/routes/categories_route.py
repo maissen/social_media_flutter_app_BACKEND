@@ -25,6 +25,6 @@ categories = [
     {"id": 20, "name": "👥 Leadership"},
 ]
 
-@router.get("/categories")
+@router.get("/")
 def get_categories():
     return categories

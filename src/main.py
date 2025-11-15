@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.routes import users_route, posts_route, profile_route, feed_route, auth_route, notifications_route, ws_route, chats_route
+from src.routes import users_route, posts_route, profile_route, feed_route, auth_route, notifications_route, ws_route, chats_route, categories_route
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,6 +15,7 @@ app.include_router(feed_route.router, prefix="/feed")
 app.include_router(notifications_route.router, prefix="/notifications")
 app.include_router(chats_route.router, prefix="/chat")
 app.include_router(ws_route.router, prefix="/ws")
+app.include_router(categories_route.router, prefix="/categories")
 
 
 

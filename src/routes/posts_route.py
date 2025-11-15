@@ -13,7 +13,7 @@ from src.schemas.generic_response import GenericResponse
 from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostSchema, UpdatePostSchema
 from src.core.security import get_current_user_from_token
 from src.services.input_checker_for_bad_words import is_text_clean
-
+import json
 
 # Directory where uploaded media will be stored
 UPLOAD_DIR = os.getenv("UPLOAD_DIR")
@@ -31,14 +31,17 @@ router = APIRouter(prefix="", tags=["Posts"])
     status_code=status.HTTP_201_CREATED
 )
 async def create_post(
+    category_ids: str = Form(..., description="JSON array of category IDs"),
     content: str = Form("", description="Text content of the post"),
     media_file: UploadFile = File(None, description="Optional media file to upload"),
     current_user=Depends(get_current_user_from_token)
 ):
     """
     Create a new post for the logged-in user.
-    Accepts optional media uploads (image/video).
     """
+
+    category_ids_list = json.loads(category_ids)
+
     try:
         # Ensure there is either text content or a file
         if content.strip() == "" and media_file is None:
@@ -91,11 +94,12 @@ async def create_post(
             post_id=post_id,
             user_id=current_user.user_id,
             content=content,
-            media_url=media_url,  # ✅ Ensure media URL is set
+            media_url=media_url,
             created_at=datetime.utcnow(),
             likes_nbr=0,
             comments_nbr=0,
-            is_liked_by_me=False
+            is_liked_by_me=False,
+            categories=category_ids_list
         )
 
         # Save post to database

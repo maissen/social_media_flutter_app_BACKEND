@@ -28,6 +28,7 @@ class PostSchema(BaseModel):
     likes_nbr: int = 0
     comments_nbr: int = 0
     is_liked_by_me: bool = False
+    categories: Optional[list[int]] = []
 
 
 class UpdatePostSchema(BaseModel):
