@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
+from src.routes.categories_route import get_post_categories
 from src.crud.posts_and_comments_crud import load_feed_of_user, load_recent_posts
 from src.crud.users_crud import get_simplified_user_obj_by_id
 from src.schemas.generic_response import GenericResponse
@@ -17,6 +18,7 @@ async def get_user_feed(current_user=Depends(get_current_user_from_token)):
 
         for item in feed:
             post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
+            item.category_objects = get_post_categories(item)
 
             if post_owner is not None:
                 item.user = post_owner
@@ -59,6 +61,7 @@ async def get_explore_feed(
         #? attach user object with each post
         for item in posts:
             post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
+            item.category_objects = get_post_categories(item)
             if post_owner is not None:
                 item.user = post_owner
 

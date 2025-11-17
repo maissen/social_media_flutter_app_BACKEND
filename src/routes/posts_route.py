@@ -14,6 +14,7 @@ from src.schemas.posts import CommentProfile, CreateOrUpdateCommentSchema, PostS
 from src.core.security import get_current_user_from_token
 from src.services.input_checker_for_bad_words import is_text_clean
 import json
+from src.routes.categories_route import get_post_categories
 
 # Directory where uploaded media will be stored
 UPLOAD_DIR = os.getenv("UPLOAD_DIR")
@@ -218,6 +219,10 @@ def get_user_post(
         user = get_simplified_user_obj_by_id(user_id=post.user_id)
         post.user = user
 
+        post.category_objects = get_post_categories(post)
+
+        print(post)
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder(GenericResponse(
@@ -230,6 +235,7 @@ def get_user_post(
 
     except HTTPException:
         raise  # re-raise cleanly for FastAPI to handle
+
     except Exception as e:
         print(f"Error fetching post: {e}")
         raise HTTPException(
@@ -261,6 +267,7 @@ def get_user_posts(user_id: int, current_user=Depends(get_current_user_from_toke
 
         # Attach user info to each post
         for item in posts:
+            item.category_objects = get_post_categories(item)
             post_owner = get_simplified_user_obj_by_id(user_id=item.user_id)
             if post_owner is not None:
                 item.user = post_owner
